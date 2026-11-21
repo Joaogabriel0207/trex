@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.ufg.atlas.desktop.ControleConfiguracoes" spacing="12" prefWidth="440" styleClass="formulario">
+    <Label text="Endereço do Backend"/>
+    <TextField fx:id="servidor" promptText="http://nome-do-servidor:8080"/>
+    <VBox fx:id="impressoras" spacing="8">
+        <Label text="Impressora do Bar"/><ComboBox fx:id="bar" maxWidth="Infinity"/>
+        <Label text="Impressora da Cozinha"/><ComboBox fx:id="cozinha" maxWidth="Infinity"/>
+    </VBox>
+    <Label fx:id="aviso" styleClass="aviso" wrapText="true" />
+    <HBox alignment="CENTER_RIGHT" spacing="8">
+        <Button text="Cancelar" cancelButton="true" onAction="#cancelar"/>
+        <Button text="Salvar" defaultButton="true" onAction="#salvar" styleClass="principal"/>
+    </HBox>
+</VBox>

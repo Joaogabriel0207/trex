@@ -1,0 +1,63 @@
+@startuml
+title ATLAS | Casos de uso · gestão, produção e acesso inicial
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+left to right direction
+actor "Gerente ativo" as G
+actor "Operador de implantação" as O
+rectangle "ATLAS · administração" {
+  usecase "Cadastrar mesa" as Mesa
+  usecase "Consultar, cadastrar\ne editar produtos" as Produto
+  usecase "Consultar, cadastrar\ne editar funcionários" as Func
+  usecase "Acompanhar pedidos\nem andamento" as Ped
+  usecase "Marcar pedido registrado\ncomo pronto" as Pronto
+  usecase "Configurar conexão e\nfilas do Bar e da Cozinha" as Config
+  usecase "Consultar tarefas e\nver comprovante por setor" as Tarefas
+  usecase "Enviar comprovante\nà fila do setor" as Print
+  usecase "Conferir resultado\nda tentativa" as Conferir
+  usecase "Repetir envio de tarefa\nem FALHA" as Retry
+  usecase "Cadastrar primeiro\ngerente pelo console" as Boot
+}
+G -- Mesa
+G -- Produto
+G -- Func
+G -- Ped
+G -- Pronto
+G -- Config
+G -- Tarefas
+G -- Print
+G -- Conferir
+G -- Retry
+O -- Boot
+note bottom of Boot
+  Servidor.main("criar-gerente"), console interativo
+  e tabela de funcionários vazia.
+end note
+note bottom of Conferir
+  A interface oferece conferência em
+  EM_TENTATIVA ou INCERTA.
+end note
+@enduml

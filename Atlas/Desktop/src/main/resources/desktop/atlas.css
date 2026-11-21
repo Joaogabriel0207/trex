@@ -1,0 +1,60 @@
+.root {
+    -fx-font-family: "Inter";
+    -fx-font-size: 14px;
+    -fx-accent: #0347ff;
+    -fx-focus-color: #155eef;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: #f4f7fb;
+}
+.label { -fx-text-fill: #15253a; }
+.titulo { -fx-font-size: 29px; -fx-font-weight: bold; }
+.subtitulo { -fx-font-weight: bold; -fx-font-size: 19px; }
+.valor { -fx-font-size: 20px; -fx-font-weight: bold; }
+.button, .combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #d5dfeb;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-padding: 7px 12px;
+    -fx-text-fill: #15253a;
+}
+.button:hover { -fx-background-color: #eaf0ff; }
+.button:focused, .combo-box:focused, .text-field:focused { -fx-border-color: #155eef; }
+.button.principal { -fx-text-fill: white; -fx-background-color: #0347ff; -fx-border-color: transparent; }
+.button.principal:hover { -fx-background-color: #123bc0; }
+.button.cartao-inicio { -fx-alignment: center-left; -fx-padding: 14px; -fx-border-color: #e1e8f1; }
+.button.cartao-inicio:focused { -fx-border-color: #155eef; }
+.nome-cartao { -fx-font-weight: bold; -fx-graphic-text-gap: 8px; }
+.legenda-cartao { -fx-font-size: 12px; -fx-text-fill: #536579; }
+.text-field { -fx-padding: 8px 12px; -fx-background-color: white; -fx-border-color: #d9d9d9; -fx-border-radius: 7px; -fx-background-radius: 7px; }
+.rolagem-lateral, .rolagem-lateral > .viewport { -fx-background: white; -fx-background-color: white; -fx-padding: 0; }
+.lateral { -fx-padding: 22px 16px 16px; -fx-background-color: white; -fx-border-color: transparent #e1e8f1 transparent transparent; }
+.button.nav { -fx-min-height: 42px; -fx-alignment: center-left; -fx-graphic-text-gap: 10px; -fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #536579; }
+.button.nav:hover, .button.nav.selecionado { -fx-background-color: #eaf0ff; -fx-text-fill: #0347ff; }
+.button.nav:focused { -fx-border-color: #155eef; }
+.cabecalho { -fx-padding: 10px 24px; -fx-min-height: 72px; -fx-background-color: white; -fx-border-color: transparent transparent #e1e8f1 transparent; }
+.conteudo { -fx-padding: 22px 24px; }
+.status { -fx-padding: 0 24px 10px; -fx-text-fill: #536579; }
+.formulario { -fx-background-color: white; -fx-padding: 20px; }
+.table-view { -fx-background-color: white; -fx-border-color: #e1e8f1; -fx-table-cell-border-color: #e1e8f1; }
+.table-view .column-header-background, .table-view .column-header, .table-view .filler { -fx-background-color: #edf2f8; }
+.table-view .column-header .label { -fx-alignment: center-left; -fx-padding: 9px 6px; }
+.table-row-cell { -fx-cell-size: 38px; -fx-background-color: white; }
+.table-row-cell:selected { -fx-background-color: #eaf0ff; }
+.table-row-cell:selected .text { -fx-fill: #15253a; }
+.pagina-login { -fx-background-color: white; }
+.credenciais { -fx-padding: 20px; }
+.credenciais .titulo, .credenciais .label { -fx-text-fill: #1e1e1e; }
+.credenciais .button.principal { -fx-background-color: #155eef; -fx-min-height: 42px; -fx-background-radius: 22px; }
+.credenciais .text-field { -fx-border-radius: 22px; -fx-background-radius: 22px; -fx-min-height: 42px; }
+.aviso { -fx-text-fill: #8c3028; }
+.rodape { -fx-padding: 12px 18px; }
+.boas-vindas { -fx-padding: 34px; }
+.boas-vindas .saudacao { -fx-font-size: 31px; -fx-font-weight: bold; -fx-text-fill: white; }
+.boas-vindas .nome-atlas { -fx-font-size: 78px; -fx-font-weight: bold; -fx-text-fill: white; }
+.faixa-1 { -fx-background-color: linear-gradient(to bottom, #0347ff, #697df4 38%, #7a7df5 59%, #2940ef 83%, #004dff); }
+.faixa-2 { -fx-background-color: linear-gradient(to bottom, #b3b4f4, #71c5ff 20%, #0f9bfb 40%, #b7a8f9 58%, #d75ed7 71%, #7223ed 83%, #0050ff); }
+.faixa-3 { -fx-background-color: linear-gradient(to bottom, #f5c8fc, #cad1fd 24%, #629df9 43%, #ddadf6 59%, #fa8bc6 75%, #f050de 90%, #bc17f9); }
+.faixa-4 { -fx-background-color: linear-gradient(to bottom, #5a1ff6, #7027e5 27%, #b951f0 54%, #ff4fca 78%, #ff39e2); }
+.faixa-5 { -fx-background-color: linear-gradient(to bottom, #0046ff, #4269fe 43%, #5e5ff9 67%, #253bf6 80%, #0054ff); }
+

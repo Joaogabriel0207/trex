@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.ufg.atlas.desktop.ControlePainel" prefWidth="1080" prefHeight="710" stylesheets="@atlas.css">
+    <left><ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="240" styleClass="rolagem-lateral">
+        <VBox styleClass="lateral" spacing="3">
+            <ImageView fitWidth="134" fitHeight="48" preserveRatio="true" accessibleText="ATLAS">
+                <image><Image url="@marca.png"/></image>
+            </ImageView>
+            <Region prefHeight="12"/>
+            <Button fx:id="inicio" text="Início" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@inicio.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="pedidos" text="Pedidos" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@pedidos.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="salao" text="Salão" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@salao.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="cardapio" text="Cardápio" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@cardapio.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="funcionarios" text="Funcionários" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@funcionarios.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="financeiro" text="Financeiro" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@financeiro.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="producao" text="Produção e impressão" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@producao.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="historico" text="Histórico" maxWidth="Infinity" onAction="#navegar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@historico.png"/></image></ImageView></graphic>
+            </Button>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Button fx:id="configuracoes" text="Configurações" maxWidth="Infinity" onAction="#configurar" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@configuracoes.png"/></image></ImageView></graphic>
+            </Button>
+            <Button fx:id="sair" text="Sair" maxWidth="Infinity" onAction="#sair" styleClass="nav">
+                <graphic><ImageView fitWidth="20" fitHeight="20" preserveRatio="true"><image><Image url="@sair.png"/></image></ImageView></graphic>
+            </Button>
+        </VBox>
+    </ScrollPane></left>
+    <center><BorderPane>
+        <top><HBox alignment="CENTER_LEFT" spacing="12" styleClass="cabecalho">
+            <Label fx:id="titulo" styleClass="titulo" />
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="operador" />
+            <Button text="Atualizar" onAction="#atualizar" />
+        </HBox></top>
+        <center><StackPane fx:id="area" styleClass="conteudo"/></center>
+        <bottom><Label fx:id="aviso" wrapText="true" maxWidth="Infinity" styleClass="status"/></bottom>
+    </BorderPane></center>
+</BorderPane>

@@ -1,0 +1,83 @@
+@startuml
+title ATLAS | Solicitação da conta, pagamento e liberação da mesa
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Garçom as G
+participant "Salao / Api\nAndroid" as M
+participant "ApiHttp / Dados" as H
+participant BancoComandas as B
+database PostgreSQL as DB
+participant "Comanda / Pagamento\nModelo" as J
+participant "Secoes / Operacoes /\nClienteHttp (Desktop)" as D
+participant Formularios as F
+actor "Caixa ou gerente" as C
+
+G -> M : confirmar Solicitar conta [comanda ABERTA na UI]
+M -> H : POST /comandas/{id}/solicitar [GARCOM]
+H -> B : solicitar(conexao, id)
+B -> DB : UPDATE ABERTA ou CONTA_SOLICITADA → CONTA_SOLICITADA
+alt em atendimento
+  H -> DB : commit()
+  H -> H : avisar.accept("comandas")
+  H --> M : 200 {id}, seguido por comanda() no Android
+else ausente ou encerrada
+  H -> DB : rollback()
+  H --> M : 409 {erro}
+end
+
+C -> D : abrir Financeiro
+D -> H : GET /comandas [GERENTE ou CAIXA]
+H -> B : listar(conexao, funcionario)
+B -> DB : consulta com totais em centavos
+H --> D : lista filtrada no Desktop por Secoes.contas(false)
+C -> D : Receber e fechar (CONTA_SOLICITADA)
+D -> F : pagamento(janela, linha)
+F --> C : total integral e forma DINHEIRO, CARTAO ou PIX
+alt cancela formulário
+  F --> D : Optional.empty()
+else confirma formulário
+  F --> D : {valorCentavos: total exibido, forma}
+  D -> H : POST /comandas/{id}/pagar [GERENTE ou CAIXA]
+  H -> B : pagar(conexao, funcionario, id, dados)
+  B -> DB : bloquear() → SELECT comanda FOR UPDATE
+  B -> J : new Pagamento(valor, forma)
+  B -> DB : total() → soma itens persistidos ou zero
+  B -> J : Comanda.validarPagamento(estado, total, pagamento)
+  alt comanda solicitada e valor exato
+    B -> DB : INSERT pagamentos
+    B -> DB : UPDATE comandas → ENCERRADA, encerramento = agora
+    H -> DB : commit() de ambas as escritas
+    H -> H : avisar.accept("comandas")
+    H --> D : 200 {id}, seguido por mensagem e atualizar() no Desktop
+  else recusa ou falha
+    H -> DB : rollback()
+    H --> D : 404 ausente, 409 estado ou 400 valor/forma\nErro SQL usa o status de ApiHttp.erroBanco()
+  end
+end
+note over H, DB
+  GET /mesas deixa de vincular a comanda encerrada pelo LEFT JOIN.
+  Mesa sem outra comanda em atendimento aparece LIVRE.
+  O pagamento é registrado localmente. A validação não consulta preparo nem impressão.
+end note
+@enduml

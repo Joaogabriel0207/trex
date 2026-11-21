@@ -1,0 +1,81 @@
+@startuml
+title ATLAS | Registro transacional e idempotência do pedido
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+participant "Api (Android)" as C
+participant "ApiHttp / Dados" as H
+participant BancoPedidos as P
+participant BancoComandas as D
+participant BancoSalao as B
+participant "Comanda / ItemPedido / Pedido" as M
+database PostgreSQL as DB
+
+C -> H : POST /pedidos {comandaId, chave, itens}
+H -> DB : setAutoCommit(false), relê funcionário ativo
+H -> H : Permissoes.verificar() exige GARCOM ativo
+H -> P : registrar(conexao, garcom, corpo)
+P -> P : validar comandaId, UUID e array de 1..100 itens
+P -> D : bloquear(conexao, comandaId)
+D -> DB : SELECT comanda FOR UPDATE
+D --> P : estado, ou ErroHttp(404)
+P -> DB : buscarChave() por funcionário e UUID
+alt chave encontrada, inclusive comanda encerrada
+  P -> DB : conferirRepeticao() lê itens ORDER BY id
+  P -> P : comparar comanda, tamanho e conteúdo na mesma ordem
+else chave ainda não encontrada
+  P -> M : Comanda.exigirAberta(estado) [regra do Modelo]
+  P -> DB : INSERT REGISTRADO ON CONFLICT (funcionário, chave)\nDO NOTHING RETURNING id
+  alt conflito concorrente na mesma chave
+    P -> DB : buscarChave() e conferirRepeticao()
+    P -> P : mesmas comparações do reenvio
+  else inserção nova
+    loop para cada item
+      P -> B : buscarParaPedido(conexao, produtoId)
+      B -> DB : SELECT produto FOR SHARE OF p
+      B --> P : Produto disponível, ou 404/409
+      P -> M : new ItemPedido(produto, quantidade, observacao)
+    end
+    P -> M : new Pedido(garcom, selecionados) e calcularTotal()
+    P -> D : total(conexao, comandaId)
+    P -> P : Math.addExact(total da comanda, total novo)
+    P -> DB : INSERT itens_pedido com nome, setor, preço do lançamento
+    P -> DB : INSERT tarefas_impressao PENDENTE\nSELECT DISTINCT setor dos itens desse pedido
+  end
+end
+alt lançamento novo ou repetição com conteúdo idêntico
+  P --> H : {id}
+  H -> DB : commit()
+  H -> H : avisar.accept("pedidos")
+  H --> C : 200 {id}
+else recusa de validação, conflito ou erro SQL
+  P --> H : exceção
+  H -> DB : rollback()
+  H --> C : 400 / 404 / 409 ou status de erro JDBC
+end
+legend bottom left
+  As etapas de validação que falham interrompem o ramo imediatamente.
+  Mismatch de comanda ou itens para uma chave anterior gera 409.
+  A repetição aceita retorna o primeiro ID sem inserir novos itens ou tarefas.
+endlegend
+@enduml

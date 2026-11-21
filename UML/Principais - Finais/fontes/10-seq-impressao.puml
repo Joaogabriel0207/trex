@@ -1,0 +1,76 @@
+@startuml
+title ATLAS · Sequência — Impressão
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+actor Gerente as G
+participant "FilaProducao\nDesktop" as F
+participant ClienteHttp as C
+participant "ApiHttp /\nBancoImpressoes" as H
+database PostgreSQL as PG
+participant "Impressao /\nJava Print Service" as JPS
+
+G -> F : escolhe tarefa PENDENTE ou FALHA
+F -> F : lê Preferencias.impressora(setor) e pede confirmação
+opt operador confirma e há fila configurada
+  F -> JPS : Impressao.localizar(nome)
+  alt fila indisponível
+    JPS --> F : erro antes de reservar
+  else fila disponível
+    F -> C : alterar("POST", rota de reserva, dados)
+    C -> H : POST /impressoes/{id}/reservar
+    H -> PG : reserva condicional → EM_TENTATIVA\nincrementa tentativa e grava responsável
+    alt 200 {id, tentativa} recebido
+      H --> C : reserva confirmada em commit
+      C --> F : número da tentativa
+      F -> JPS : Impressao.enviar(fila, titulo, texto)\n→ DocPrintJob.print(Printable)
+      alt retorno normal da fila
+        JPS --> F : registra ENVIADA
+      else exceção no envio
+        JPS --> F : registra INCERTA
+      end
+      F -> C : resultado() usa ClienteHttp.alterar()
+      C -> H : POST /impressoes/{id}/resultado
+      H -> PG : atualiza se tentativa e origem válidas
+      H --> C : 200 após commit ou erro
+    else reserva recusada ou sem resposta
+      C --> F : operação interrompida antes do despacho
+    end
+  end
+end
+opt conferência de EM_TENTATIVA ou INCERTA
+  G -> F : informa situação observada na fila
+  F -> C : resultado(..., conferido=true)
+  C -> H : POST /impressoes/{id}/resultado
+  H -> PG : confere tentativa, estado, detalhe e guarda autor
+  H --> C : 200 após commit ou erro
+end
+legend bottom left
+  Trabalho executado no executor do Desktop. Outro gerente pode registrar conferência explícita.
+  Apenas FALHA aceita nova reserva, com repetir=true e a tentativa atual.
+  ENVIADA indica aceite da fila. O código não recebe confirmação de impressão física.
+  Se o resultado não for confirmado por HTTP, o Desktop orienta conferir a fila.
+endlegend
+@enduml

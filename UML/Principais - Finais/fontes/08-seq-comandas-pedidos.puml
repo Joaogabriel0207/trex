@@ -1,0 +1,82 @@
+@startuml
+title ATLAS · Sequência — Comandas e pedidos
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+actor Garçom as G
+participant "Salao / Montagem\nAndroid" as UI
+participant Rascunho as R
+participant Api as C
+participant "ApiHttp / Dados" as H
+participant "BancoComandas /\nBancoPedidos" as B
+database PostgreSQL as PG
+
+G -> UI : seleciona mesa em Salao.mesas()
+opt mesa livre e abertura confirmada
+  UI -> C : alterar("/comandas", {mesaId})
+  C -> H : POST /comandas
+  H -> B : BancoComandas.abrir()
+  B -> PG : trava mesa e busca comanda não encerrada
+  B -> PG : INSERT ABERTA se não houver comanda
+  H -> PG : commit()
+  H --> C : 200 {id} existente ou novo
+end
+G -> UI : consulta consumo e monta itens na comanda aberta
+UI -> C : obter() consulta consumo e listar() carrega produtos
+C -> H : GET /comandas/{id} e GET /produtos
+H --> C : consumo e cardápio disponível
+UI -> R : prepararEnvio()
+R -> R : salva conteúdo e chave UUID em SharedPreferences
+R --> UI : {comandaId, chave, itens}
+UI ->> C : Atendimento.executar() agenda envio
+C -> H : POST /pedidos
+H -> B : BancoPedidos.registrar()
+B -> PG : trava comanda e busca (garçom, chave)
+alt registro anterior com a mesma chave
+  B -> PG : confere comanda e itens na ordem do envio
+  B --> H : ID original se idêntico, 409 se divergir
+else envio novo
+  B -> B : Comanda.exigirAberta()
+  B -> PG : INSERT REGISTRADO com proteção UNIQUE
+  B -> PG : valida produtos, grava itens e tarefas por setor
+  B --> H : novo ID
+end
+alt pedido aceito ou repetição idêntica
+  H -> PG : commit()
+  H --> C : 200 {id}
+  C -->> UI : confirma registro se a resposta chegar
+  UI -> R : limpar() após ler o id
+else validação, conflito ou erro SQL
+  H -> PG : rollback()
+  H --> C : status do erro
+  C -->> UI : exibe erro ou mantém envio pendente
+end
+legend bottom left
+  Salao reusa comanda já vinculada à mesa. Mesa ausente gera 404.
+  Uma disputa na chave do INSERT volta à comparação do registro anterior.
+  HTTP 400, 404, 409 e 422 limpam a chave no app. Falha de rede preserva a tentativa.
+  Uma repetição idêntica pode recuperar seu ID mesmo depois do encerramento.
+endlegend
+@enduml

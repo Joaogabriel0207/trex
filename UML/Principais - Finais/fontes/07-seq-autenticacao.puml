@@ -1,0 +1,85 @@
+@startuml
+title ATLAS · Sequência — Autenticação
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+actor Funcionário as F
+participant "Login Android /\nControleLogin" as UI
+participant "Api / ClienteHttp" as C
+participant ApiHttp as H
+participant BancoFuncionarios as B
+participant Sessoes as S
+database PostgreSQL as PG
+
+F -> UI : informa código e senha
+UI ->> C : agenda chamada no executor de rede
+C -> H : POST /login
+H -> B : autenticar(conexao, codigo, senha)
+B -> PG : SELECT funcionário ativo e senha_hash
+B -> B : Senhas.conferir() se funcionário encontrado
+B --> H : Funcionario ou null
+alt credencial inválida ou trabalhador inativo
+  H --> C : 401 {erro}
+else cargo sem acesso operacional
+  H --> C : 403 {erro}
+else cargo aceito pelo Backend
+  H -> S : abrir(codigo)
+  S --> H : token UUID em memória com validade de 8 h
+  H --> C : 200 {codigo, nome, cargo, token}
+  alt perfil aceito pelo cliente
+    C -->> UI : Android GARCOM → Atendimento\nDesktop GERENTE/CAIXA → painel
+  else cliente incompatível com o cargo
+    C -> H : POST /sair, Bearer token
+    H -> S : identificar() e encerrar()
+    H --> C : 200 {}
+    C -->> UI : exibe requisito de cargo
+  end
+end
+
+== Acesso protegido ==
+C -> H : requisição com Bearer token
+H -> S : identificar(token) se Bearer presente
+alt Bearer ausente ou sessão inválida/expirada
+  H --> C : 401
+else POST /sair com sessão válida
+  H -> S : encerrar(token)
+  H --> C : 200 {}
+else requisição de negócio
+  H -> B : buscarAtivo(conexao, codigo)
+  H -> H : Permissoes.verificar() se ativo
+  alt funcionário tornou-se inativo
+    H -> S : encerrar(token)
+    H --> C : 401
+  else rota recusada pelo perfil
+    H --> C : 403
+  else permitido
+    ref over H, PG : transação e resposta em Dados.executar() · ver diagrama 09
+  end
+end
+legend bottom left
+  ApiHttp.handle() converte corpo inválido em 400 e excesso de tamanho em 413.
+  PUT de funcionário revoga as sessões do afetado após commit.
+endlegend
+@enduml

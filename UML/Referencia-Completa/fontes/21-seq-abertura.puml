@@ -1,0 +1,91 @@
+@startuml
+title ATLAS | Abertura da comanda e consulta de consumo
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Garçom as G
+participant "Salao / Atendimento" as S
+participant "Api (Android)" as C
+participant "ApiHttp / Dados" as H
+participant BancoSalao as B
+participant BancoComandas as D
+database PostgreSQL as DB
+G -> S : abrir lista de mesas
+S ->> C : Atendimento.executar() → Api.listar("/mesas")
+C -> H : GET /mesas
+H -> B : mesas(conexao)
+B -> DB : LEFT JOIN mesas e comandas não encerradas
+B --> H : lista com estado derivado e comandaId
+H --> C : 200 lista
+C -->> S : exibe mesas
+G -> S : selecionar(mesa)
+alt comandaId presente
+  S -> S : comanda() com ID recebido da lista
+else mesa livre na lista
+  S --> G : oferece Abrir comanda
+  opt ação confirmada
+    G -> S : confirmar abertura
+    S ->> C : Api.alterar("/comandas", {mesaId})
+    C -> H : POST /comandas [GARCOM]
+    H -> D : abrir(conexao, garcom, mesaId)
+    D -> DB : SELECT mesas FOR UPDATE
+    alt mesa ausente
+      D --> H : ErroHttp(404)
+      H -> DB : rollback()
+      H --> C : 404 {erro}
+    else mesa encontrada
+      D -> DB : SELECT comanda não encerrada FOR UPDATE
+      alt havia comanda (inclui CONTA_SOLICITADA)
+        D --> H : ID existente
+      else sem comanda em atendimento
+        D -> DB : INSERT comanda ABERTA RETURNING id
+        D --> H : novo ID
+      end
+      H -> DB : commit()
+      H -> H : avisar.accept("comandas")
+      H --> C : 200 {id}
+      C -->> S : grava comandaId e chama comanda()
+    end
+  end
+end
+opt comanda() chamada
+  S ->> C : Api.obter("/comandas/" + id)
+  C -> H : GET /comandas/{id}
+  H -> D : detalhar(conexao, funcionario, id)
+  D -> DB : SELECT cabeçalho FOR SHARE OF c
+  alt ausente ou encerrada para garçom
+    D --> H : ErroHttp(404)
+    H --> C : 404 {erro}
+    C -->> S : volta a mesas()
+  else acessível
+    D -> DB : total() e ConsultaPedidos.daComanda()
+    D --> H : cabeçalho, total e todos os pedidos da comanda
+    H --> C : 200 JSON
+    C -->> S : mostra consumo e ações de conta se ABERTA
+  end
+end
+legend bottom left
+  Pré-condição dos GET: sessão ativa. A transação de ApiHttp.atender() também envolve as consultas.
+  BancoDeDados/esquema.sql limita a uma comanda não encerrada por mesa.
+endlegend
+@enduml

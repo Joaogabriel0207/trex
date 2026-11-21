@@ -1,0 +1,72 @@
+@startuml
+title ATLAS | Encaminhamento de comprovantes para Bar e Cozinha
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+participant BancoPedidos as B
+database PostgreSQL as DB
+actor Gerente as G
+participant "ControlePainel / Secoes" as P
+participant ClienteHttp as C
+participant "ApiHttp / Dados" as H
+participant BancoImpressoes as I
+participant "FilaProducao" as F
+participant "Impressao / Java Print Service" as J
+queue "Fila do SO\nselecionada por setor" as Q
+
+B -> DB : registrar() → INSERT DISTINCT (pedido_id, setor, PENDENTE)
+note over B, DB
+  Mesma transação dos itens. Uma tarefa por setor presente.
+  Pedido misto gera uma para BAR e outra para COZINHA.
+end note
+H -> DB : ApiHttp.atender() confirma a transação
+G -> P : abrir Produção e impressão
+P -> P : Secoes.producao() seleciona rota /impressoes
+P ->> C : atualizar() → Ambiente.executar() → listar(rota)
+C -> H : GET /impressoes [GERENTE]
+H -> I : listar(conexao)
+I -> DB : JOIN itens por pedido_id e setor da tarefa
+I -> I : agrupa por id e monta texto por setor
+I --> H : tarefas com estado, tentativa, setor, texto e detalhe
+H --> C : 200 lista
+C -->> P : Secoes.preencher() → ControleListagem.preencher()
+opt operador pede envio de tarefa selecionada
+  G -> P : Imprimir / Tentar novamente
+  P -> F : imprimir(tarefa)
+  F -> F : Preferencias.impressora(setor)
+  alt BAR
+    F -> F : lê fila.BAR
+  else COZINHA
+    F -> F : lê fila.COZINHA
+  end
+  alt não configurada
+    F --> G : aviso para escolher a fila do setor
+  else configurada e operador confirma
+    ref over F, Q : localizar(), reservar e enviar via Java Print Service\nver sequência de impressão
+  end
+end
+legend bottom left
+  Bar e Cozinha designam setores dos itens e destinos de fila no Desktop.
+  Qualquer entrega física depende da fila, driver e dispositivo configurados.
+endlegend
+@enduml

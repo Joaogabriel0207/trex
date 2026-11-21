@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp">
+        <TextView style="@style/Rotulo" android:text="Backend na rede local" android:labelFor="@+id/endereco"/>
+        <EditText android:id="@id/endereco" style="@style/Campo" android:inputType="textUri" android:hint="http://servidor:8080"/>
+        <TextView style="@style/Rotulo" android:text="Broker MQTT (opcional)" android:labelFor="@+id/broker"/>
+        <EditText android:id="@id/broker" style="@style/Campo" android:inputType="textUri" android:hint="Padrão: mesmo servidor, porta 1883"/>
+        <TextView style="@style/Rotulo" android:text="Usuário MQTT (opcional)" android:labelFor="@+id/usuario_mqtt"/>
+        <EditText android:id="@id/usuario_mqtt" style="@style/Campo" android:inputType="textNoSuggestions"/>
+        <TextView style="@style/Rotulo" android:text="Senha MQTT (nesta execução)" android:labelFor="@+id/senha_mqtt"/>
+        <EditText android:id="@id/senha_mqtt" style="@style/Campo" android:inputType="textPassword" android:saveEnabled="false"/>
+    </LinearLayout>
+</ScrollView>

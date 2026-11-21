@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+    <TextView style="@style/Rotulo" android:text="Quantidade" android:labelFor="@+id/quantidade"/>
+    <EditText android:id="@id/quantidade" style="@style/Campo" android:inputType="number" android:maxLength="7"/>
+    <TextView style="@style/Rotulo" android:text="Observação" android:labelFor="@+id/observacao" android:layout_marginTop="8dp"/>
+    <EditText android:id="@id/observacao" style="@style/Campo" android:inputType="textCapSentences|textMultiLine"
+        android:maxLines="3" android:singleLine="false" android:hint="Ex.: sem cebola"/>
+</LinearLayout>

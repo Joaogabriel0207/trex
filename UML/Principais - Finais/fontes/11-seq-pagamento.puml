@@ -1,0 +1,70 @@
+@startuml
+title ATLAS · Sequência — Pagamento e fechamento
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+actor Garçom as G
+participant "Salao / Api\nAndroid" as M
+participant "ApiHttp / Dados" as H
+participant BancoComandas as B
+database PostgreSQL as PG
+participant "Operacoes /\nClienteHttp" as D
+actor "Caixa ou\ngerente" as C
+
+G -> M : confirma Solicitar conta
+M -> H : POST /comandas/{id}/solicitar
+H -> B : solicitar(conexao, id)
+B -> PG : UPDATE ABERTA ou CONTA_SOLICITADA\n→ CONTA_SOLICITADA
+alt atualiza e confirma transação
+  H --> M : 200 {id} e reconsulta
+else ausente ou encerrada
+  H -> PG : rollback()
+  H --> M : 409
+end
+
+C -> D : abre a área Financeiro
+D -> H : GET /comandas
+H --> D : lista, com total persistido
+C -> D : seleciona conta solicitada e confirma a forma
+D -> H : POST /comandas/{id}/pagar\n{valorCentavos, forma}
+H -> B : pagar(conexao, funcionario, id, dados)
+B -> PG : bloqueia comanda e soma itens registrados
+B -> B : instancia Pagamento e chama Comanda.validarPagamento()
+alt conta solicitada e valor integral válido
+  B -> PG : INSERT pagamentos
+  B -> PG : UPDATE comanda ENCERRADA e horário
+  H -> PG : commit() atômico
+  H --> D : 200 {id}
+  D --> C : informa pagamento e atualiza a lista
+else valor/forma inválidos, estado incompatível ou falha SQL
+  H -> PG : rollback()
+  H --> D : 400, 404, 409 ou status JDBC
+end
+legend bottom left
+  O formulário envia o total exibido e DINHEIRO, CARTAO ou PIX.
+  O Backend confere o total persistido. Valor zero é válido para conta vazia.
+  GET /mesas deriva LIVRE quando não há outra comanda em atendimento.
+endlegend
+@enduml

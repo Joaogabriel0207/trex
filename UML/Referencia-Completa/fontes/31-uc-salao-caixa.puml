@@ -1,0 +1,57 @@
+@startuml
+title ATLAS | Casos de uso · salão, caixa e histórico no Desktop
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+left to right direction
+actor "Gerente ativo" as G
+actor "Caixa ativo" as C
+actor "Operador de salão e caixa" as Comum <<abstrato>>
+actor "Operador do computador" as O
+rectangle "ATLAS · Desktop e API" {
+  usecase "Configurar conexão HTTP\nna tela de login" as Rede
+  usecase "Entrar e sair" as Sessao
+  usecase "Consultar salão e\nconsumo da comanda" as Salao
+  usecase "Consultar contas\nem atendimento" as Fin
+  usecase "Registrar recebimento integral\ne encerrar comanda" as Pagar
+  usecase "Consultar histórico\nde comandas encerradas" as Hist
+  usecase "Consultar pedidos entregues" as HP
+  usecase "Consultar panorama operacional" as Inicio
+}
+G --|> Comum
+C --|> Comum
+O -- Rede
+Comum -- Sessao
+Comum -- Salao
+Comum -- Fin
+Comum -- Pagar
+Comum -- Hist
+G -- HP
+G -- Inicio
+note bottom of Pagar
+  Exige CONTA_SOLICITADA e valor integral.
+  Encerramento e liberação são efeitos do pagamento.
+end note
+@enduml

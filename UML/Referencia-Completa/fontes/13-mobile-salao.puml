@@ -1,0 +1,230 @@
+@startuml
+title ATLAS | Classes do Android · salão, montagem e rascunho
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.mobile" {
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Salao.java:8
+  class "Salao" as J_mobile_Salao <<pacote, final>> {
+    ' linha 9
+    {field} -tela: Atendimento [final]
+    ' linha 11
+    {method} ~Salao(tela: Atendimento)
+    ' linha 13
+    {method} ~mesas(): void
+    ' linha 26
+    {method} ~mesaLivre(): void
+    ' linha 37
+    {method} -selecionar(mesa: JSONObject): void
+    ' linha 53
+    {method} ~comanda(): void
+    ' linha 84
+    {method} -abrirCardapio(id: long): void
+    ' linha 98
+    {method} ~pedidos(): void
+    ' linha 112
+    {method} -detalhes(pedido: JSONObject, proprio: boolean): void
+    ' linha 127
+    {method} -descreverItens(pedido: JSONObject): String
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Montagem.java:17
+  class "Montagem" as J_mobile_Montagem <<pacote, final>> {
+    ' linha 18
+    {field} -tela: Atendimento [final]
+    ' linha 19
+    {field} -pesquisa: EditText [final]
+    ' linha 20
+    {field} -categorias: Spinner [final]
+    ' linha 21
+    {field} -produtos: JSONArray
+    ' linha 22
+    {field} -nomesCategorias: ArrayList<String>
+    ' linha 24
+    {method} ~Montagem(tela: Atendimento)
+    ' linha 39
+    {method} ~cardapio(): void
+    ' linha 46
+    {method} ~atualizarProdutos(): void
+    ' linha 65
+    {method} -filtrar(): void
+    ' linha 88
+    {method} -editar(produto: long, nome: String, preco: long): void
+    ' linha 121
+    {method} -salvar(id: long, nome: String, preco: long, quantidade: int, observacao: String): boolean
+    ' linha 132
+    {method} ~resumo(): void
+    ' linha 161
+    {method} -subtituloDoEnvio(): String
+    ' linha 165
+    {method} -enviar(): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Rascunho.java:10
+  class "Rascunho" as J_mobile_Rascunho <<pacote, final>> {
+    ' linha 11
+    {field} -arquivo: SharedPreferences [final]
+    ' linha 12
+    {field} -dono: String [final]
+    ' linha 13
+    {field} -comanda: long
+    ' linha 14
+    {field} -mesa: int
+    ' linha 15
+    {field} -chave: String
+    ' linha 16
+    {field} -itens: JSONArray
+    ' linha 18
+    {method} ~Rascunho(contexto: Context, servidor: String, codigo: String)
+    ' linha 34
+    {method} ~comanda(): long
+    ' linha 35
+    {method} ~mesa(): int
+    ' linha 36
+    {method} ~pendente(): boolean
+    ' linha 37
+    {method} ~itens(): JSONArray
+    ' linha 39
+    {method} ~iniciar(id: long, numero: int): void
+    ' linha 46
+    {method} ~indice(produto: long): int
+    ' linha 53
+    {method} ~editar(produto: long, nome: String, preco: long, quantidade: int, observacao: String): void
+    ' linha 72
+    {method} ~total(): long
+    ' linha 81
+    {method} ~prepararEnvio(): JSONObject
+    ' linha 95
+    {method} ~recusar(): void
+    ' linha 100
+    {method} ~limpar(): void
+    ' linha 108
+    {method} -salvar(): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Linhas.java:11
+  class "Linhas" as J_mobile_Linhas <<pacote, final>> {
+    ' linha 23
+    {field} -linhas: ArrayList<Linha> [final]
+    ' linha 24
+    {field} -inflador: LayoutInflater [final]
+    ' linha 25
+    {field} -mesas: boolean [final]
+    ' linha 27
+    {method} ~Linhas(contexto: Context, linhas: ArrayList<Linha>, mesas: boolean)
+    ' linha 33
+    {method} +getCount(): int
+    ' linha 34
+    {method} +getItem(posicao: int): Linha
+    ' linha 35
+    {method} +getItemId(posicao: int): long
+    ' linha 37
+    {method} +getView(posicao: int, anterior: View, pai: ViewGroup): View
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Linhas.java:12
+  class "Linhas.Linha" as J_mobile_Linhas_Linha <<pacote, static, final>> {
+    ' linha 13
+    {field} ~titulo: String [final]
+    ' linha 14
+    {field} ~detalhe: String [final]
+    ' linha 15
+    {field} ~selecionar: Runnable [final]
+    ' linha 16
+    {method} ~Linha(titulo: String, detalhe: String, selecionar: Runnable)
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Dados.java:10
+  class "Dados" as J_mobile_Dados <<pacote, final>> {
+    ' linha 11
+    {method} -Dados()
+    ' linha 13
+    {method} {static} ~objeto(pares: Object...): JSONObject
+    ' linha 25
+    {method} {static} ~reais(centavos: long): String
+    ' linha 29
+    {method} {static} ~estado(valor: String): String
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Montagem.java:28
+  class "Montagem.java:28" as J_mobile_Montagem_anon_28 <<anônima>> {
+    ' linha 29
+    {method} +beforeTextChanged(texto: CharSequence, inicio: int, tamanho: int, depois: int): void
+    ' linha 30
+    {method} +onTextChanged(texto: CharSequence, inicio: int, antes: int, tamanho: int): void
+    ' linha 31
+    {method} +afterTextChanged(texto: Editable): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Montagem.java:33
+  class "Montagem.java:33" as J_mobile_Montagem_anon_33 <<anônima>> {
+    ' linha 34
+    {method} +onItemSelected(pai: AdapterView<?>, v: View, indice: int, id: long): void
+    ' linha 35
+    {method} +onNothingSelected(pai: AdapterView<?>): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:21
+  class "Atendimento" as J_mobile_Atendimento <<public, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:22
+  enum "Atendimento.Pagina" as J_mobile_Atendimento_Pagina <<pacote, static, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:15
+  class "Api" as J_mobile_Api <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:16
+  class "Api.Recusa" as J_mobile_Api_Recusa <<pacote, static, final, referência>> #EDF3F9
+}
+
+abstract class "android.widget.BaseAdapter" as Ext_BaseAdapter <<externo>> #EEF1F5
+
+interface "android.text.TextWatcher" as Ext_TextWatcher <<externo>> #EEF1F5
+
+interface "android.widget.AdapterView.OnItemSelectedListener" as Ext_AdapterView_OnItemSelectedListener <<externo>> #EEF1F5
+
+J_mobile_Linhas --|> Ext_BaseAdapter
+J_mobile_Montagem_anon_28 ..|> Ext_TextWatcher
+J_mobile_Montagem_anon_33 ..|> Ext_AdapterView_OnItemSelectedListener
+J_mobile_Salao --> "1" J_mobile_Atendimento : tela
+J_mobile_Montagem --> "1" J_mobile_Atendimento : tela
+J_mobile_Salao ..> J_mobile_Atendimento_Pagina
+J_mobile_Montagem ..> J_mobile_Atendimento_Pagina
+J_mobile_Salao ..> J_mobile_Dados
+J_mobile_Salao ..> J_mobile_Api : tela.api
+J_mobile_Salao ..> J_mobile_Api_Recusa : comanda() trata 404
+J_mobile_Salao ..> J_mobile_Linhas_Linha : cria linhas
+J_mobile_Salao ..> J_mobile_Rascunho : abrirCardapio()
+J_mobile_Salao ..> J_mobile_Montagem : abrirCardapio()
+J_mobile_Montagem ..> J_mobile_Dados
+J_mobile_Montagem ..> J_mobile_Api : tela.api
+J_mobile_Montagem ..> J_mobile_Api_Recusa : enviar()
+J_mobile_Montagem ..> J_mobile_Rascunho : tela.rascunho
+J_mobile_Montagem ..> J_mobile_Salao : enviar() → pedidos()
+J_mobile_Montagem ..> J_mobile_Linhas_Linha : cria linhas
+J_mobile_Montagem ..> J_mobile_Montagem_anon_28 : cria TextWatcher
+J_mobile_Montagem ..> J_mobile_Montagem_anon_33 : cria listener
+J_mobile_Linhas --> "0..*" J_mobile_Linhas_Linha : linhas
+J_mobile_Rascunho ..> J_mobile_Dados : objeto()
+@enduml

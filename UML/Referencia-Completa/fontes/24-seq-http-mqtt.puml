@@ -1,0 +1,102 @@
+@startuml
+title ATLAS | HTTP, commit e notificações MQTT
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+participant "Api / ClienteHttp" as C
+participant ApiHttp as H
+participant Dados as D
+database PostgreSQL as DB
+participant "AvisosMqtt\nBackend" as S
+queue "Broker MQTT\n(Mosquitto)" as Q
+participant "AvisosMqtt\nDesktop" as FX
+participant "Notificacoes\nAndroid" as M
+participant "ControlePainel" as P
+participant "Atendimento" as A
+
+C -> H : requisição de negócio autenticada
+H -> DB : abrir JDBC e chamar setAutoCommit(false)
+H -> H : buscarAtivo() e Permissoes.verificar()
+H -> D : executar(conexao, pessoa, metodo, partes, corpo)
+D -> DB : operação SQL
+alt erro em validação, autorização ou SQL
+  H -> DB : rollback()
+  H --> C : {erro}, status de ApiHttp.handle()
+else transação concluída
+  H -> DB : commit()
+  opt PUT /funcionarios/{codigo}
+    H -> H : sessoes.revogar(codigo)
+  end
+  opt método diferente de GET
+    H -> S : avisar.accept(recurso) → notificar(recurso)
+    opt cliente conectado e executor aceita
+      S ->> S : executor.execute(() -> publicar(recurso))
+    end
+  end
+  H --> C : 200 JSON
+end
+
+== Inscrições e publicação assíncrona ==
+loop Desktop: atraso de 10 s entre rodadas
+  FX -> FX : acompanhar()
+  opt reconexão ou primeira assinatura
+    FX -> Q : connect() / subscribe("atlas/eventos", 1)
+    FX ->> P : mudou.run() → Platform.runLater()
+  end
+end
+loop Android em primeiro plano: atraso de 15 s entre rodadas
+  M -> M : conectar()
+  opt conexão e assinatura necessárias
+    M -> Q : connect() / subscribe("atlas/eventos", 1)
+    M ->> A : ouvinte.conexao(true) e ouvinte.atualizar()
+  end
+end
+opt tarefa publicada com conexão disponível
+  S -> Q : publish("atlas/eventos", recurso UTF-8, 1, false)
+  Q -->> FX : callback de assinatura
+  Q -->> M : messageArrived()
+  FX ->> P : mudou.run() → Platform.runLater()
+  M ->> A : ouvinte.atualizar() → Handler.post()
+end
+
+== Reconsulta, inclusive quando o broker falha ==
+P -> P : agrupar 250 ms → atualizar()\nTimeline 45 s ou botão também chama atualizar()
+opt Desktop livre para consultar
+  P -> C : Ambiente.executar() → listar(rota da área)
+  C -> H : GET autorizado
+end
+A -> A : atualizarPorEvento() ao regressar ao primeiro plano\nO menu chama atualizar() diretamente
+alt aviso com operação em andamento
+  A -> A : marca eventoPendente para tratar em terminar()
+else visível, aviso fora do resumo
+  A -> C : atualizarProdutos() ou atualizar()
+  C -> H : GET conforme área e estado
+end
+
+legend bottom left
+  Backend tenta conectar a cada 15 s de atraso e chama publicar("atualizacao") ao conectar.
+  O executor pode publicar antes ou depois da resposta HTTP. O aviso pode ser perdido.
+  Falhas MQTT não desfazem commit. Desktop fecha cliente e tenta de novo. Android informa desconexão
+  e encerra o cliente em onStop(). Não há confirmação de negócio no tópico.
+endlegend
+@enduml

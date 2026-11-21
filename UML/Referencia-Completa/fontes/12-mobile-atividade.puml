@@ -1,0 +1,224 @@
+@startuml
+title ATLAS | Classes do Android · login, atendimento e callbacks
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.mobile" {
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Login.java:15
+  class "Login" as J_mobile_Login <<public, final>> {
+    ' linha 16
+    {field} -rede: ExecutorService [final]
+    ' linha 17
+    {field} -configuracao: Configuracao
+    ' linha 18
+    {field} -entrar: Button
+    ' linha 19
+    {field} -codigo: EditText
+    ' linha 20
+    {field} -senha: EditText
+    ' linha 21
+    {field} -aviso: TextView
+    ' linha 23
+    {method} #onCreate(anterior: Bundle): void
+    ' linha 47
+    {method} -entrar(): void
+    ' linha 89
+    {method} -resposta(mensagem: String): void
+    ' linha 97
+    {method} #onDestroy(): void
+    ' linha 15
+    {method} +Login() [implícito]
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:21
+  class "Atendimento" as J_mobile_Atendimento <<public, final>> {
+    ' linha 26
+    {field} -rede: ExecutorService [final]
+    ' linha 27
+    {field} -principal: Handler [final]
+    ' linha 28
+    {field} -ocupado: boolean
+    ' linha 29
+    {field} -eventoPendente: boolean
+    ' linha 30
+    {field} -visivel: boolean
+    ' linha 31
+    {field} -voltouDoSegundoPlano: boolean
+    ' linha 32
+    {field} -notificacoes: Notificacoes
+    ' linha 33
+    {field} -configuracao: Configuracao
+    ' linha 34
+    {field} -barra: Toolbar
+    ' linha 35
+    {field} -vazio: TextView
+    ' linha 36
+    {field} -situacao: TextView
+    ' linha 37
+    {field} -voltar: MenuItem
+    ' linha 38
+    {field} -descartar: MenuItem
+    ' linha 39
+    {field} ~pagina: Pagina
+    ' linha 40
+    {field} ~api: Api
+    ' linha 41
+    {field} ~rascunho: Rascunho
+    ' linha 42
+    {field} ~salao: Salao
+    ' linha 43
+    {field} ~montagem: Montagem
+    ' linha 44
+    {field} ~mesaId: long
+    ' linha 45
+    {field} ~comandaId: long
+    ' linha 46
+    {field} ~mesaNumero: int
+    ' linha 48
+    {method} #onCreate(anterior: Bundle): void
+    ' linha 101
+    {method} -retomar(): void
+    ' linha 111
+    {method} -sair(): void
+    ' linha 117
+    {method} -voltarAoLogin(): void
+    ' linha 122
+    {method} ~mostrar(destino: Pagina, titulo: String, subtitulo: String): void
+    ' linha 136
+    {method} ~linhas(dados: ArrayList<Linhas.Linha>, semResultados: String): void
+    ' linha 151
+    {method} ~acao(id: int, texto: String, executar: Runnable): void
+    ' linha 158
+    {method} ~confirmar(titulo: String, descricao: String, rotulo: String, confirmado: Runnable): void
+    ' linha 165
+    {method} <U+007E><T> executar(trabalho: Operacao<T>, sucesso: Receber<T>): void
+    ' linha 169
+    {method} <U+007E><T> executar(trabalho: Operacao<T>, sucesso: Receber<T>, falha: Receber<Exception>): void
+    ' linha 189
+    {method} -terminar(conclusao: Conclusao): void
+    ' linha 200
+    {method} ~erro(erro: Exception): void
+    ' linha 207
+    {method} ~aviso(mensagem: String): void
+    ' linha 209
+    {method} -atualizarPorEvento(): void
+    ' linha 216
+    {method} -atualizar(): void
+    ' linha 226
+    {method} #onStart(): void
+    ' linha 246
+    {method} #onStop(): void
+    ' linha 253
+    {method} #onSaveInstanceState(estado: Bundle): void
+    ' linha 261
+    {method} +onBackPressed(): void
+    ' linha 272
+    {method} #onDestroy(): void
+    ' linha 21
+    {method} +Atendimento() [implícito]
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:22
+  enum "Atendimento.Pagina" as J_mobile_Atendimento_Pagina <<pacote, static>> {
+    ' linha 22
+    MESAS
+    ' linha 22
+    COMANDA
+    ' linha 22
+    CARDAPIO
+    ' linha 22
+    RESUMO
+    ' linha 22
+    PEDIDOS
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:23
+  interface "Atendimento.Operacao<T>" as J_mobile_Atendimento_Operacao <<pacote, static>> {
+    ' linha 23
+    {method} +executar(): T throws Exception
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:24
+  interface "Atendimento.Receber<T>" as J_mobile_Atendimento_Receber <<pacote, static>> {
+    ' linha 24
+    {method} +aceitar(valor: T): void throws Exception
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:188
+  interface "Atendimento.Conclusao" as J_mobile_Atendimento_Conclusao <<private, static>> {
+    ' linha 188
+    {method} +executar(): void throws Exception
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Configuracao.java:11
+  class "Configuracao" as J_mobile_Configuracao <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:15
+  class "Api" as J_mobile_Api <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:16
+  class "Api.Recusa" as J_mobile_Api_Recusa <<pacote, static, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Rascunho.java:10
+  class "Rascunho" as J_mobile_Rascunho <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Salao.java:8
+  class "Salao" as J_mobile_Salao <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Montagem.java:17
+  class "Montagem" as J_mobile_Montagem <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Linhas.java:11
+  class "Linhas" as J_mobile_Linhas <<pacote, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Linhas.java:12
+  class "Linhas.Linha" as J_mobile_Linhas_Linha <<pacote, static, final, referência>> #EDF3F9
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Notificacoes.java:14
+  class "Notificacoes" as J_mobile_Notificacoes <<pacote, final, referência>> #EDF3F9
+}
+
+class "android.app.Activity" as Ext_Activity <<externo>> #EEF1F5
+
+J_mobile_Login --|> Ext_Activity
+J_mobile_Atendimento --|> Ext_Activity
+J_mobile_Login --> J_mobile_Configuracao : configuracao
+J_mobile_Login ..> J_mobile_Api : entrar()
+J_mobile_Login ..> J_mobile_Api_Recusa : trata recusa
+J_mobile_Login ..> J_mobile_Atendimento : Intent
+J_mobile_Atendimento ..> J_mobile_Login : Intent
+J_mobile_Atendimento --> J_mobile_Atendimento_Pagina : pagina
+J_mobile_Atendimento ..> J_mobile_Atendimento_Operacao : executar()
+J_mobile_Atendimento ..> J_mobile_Atendimento_Receber : executar()
+J_mobile_Atendimento ..> J_mobile_Atendimento_Conclusao : terminar()
+J_mobile_Atendimento --> "0..1" J_mobile_Notificacoes : notificacoes
+J_mobile_Atendimento --> "0..1" J_mobile_Configuracao : configuracao
+J_mobile_Atendimento --> "0..1" J_mobile_Api : api
+J_mobile_Atendimento --> "0..1" J_mobile_Rascunho : rascunho
+J_mobile_Atendimento --> "0..1" J_mobile_Salao : salao
+J_mobile_Atendimento --> "0..1" J_mobile_Montagem : montagem
+J_mobile_Atendimento ..> J_mobile_Api_Recusa : trata 401
+J_mobile_Atendimento ..> J_mobile_Linhas : linhas() cria
+J_mobile_Atendimento ..> J_mobile_Linhas_Linha : parâmetro de linhas()
+@enduml

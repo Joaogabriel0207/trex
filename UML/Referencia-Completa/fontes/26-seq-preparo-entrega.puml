@@ -1,0 +1,81 @@
+@startuml
+title ATLAS | Atualização do preparo e registro da entrega
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Gerente as G
+participant "Secoes / Operacoes\nDesktop" as D
+participant "ClienteHttp / Api" as C
+participant "ApiHttp / Dados" as H
+participant BancoPedidos as B
+database PostgreSQL as DB
+participant "Salao / Atendimento\nAndroid" as A
+actor Garçom as W
+
+G -> D : abre Pedidos e escolhe REGISTRADO
+D -> C : ControlePainel.atualizar() → listar("/pedidos")
+C -> H : GET /pedidos [GERENTE, sem filtro de autor]
+H --> C : pedidos com itens e estado
+C -->> D : mostra pedidos não ENTREGUE
+G -> D : Marcar como pronto
+D -> D : pronto(linha) → salvar()
+D ->> C : ControlePainel.executar() → ClienteHttp.alterar()
+C -> H : POST /pedidos/{id}/pronto
+H -> B : marcarPronto(conexao, id)
+B -> DB : UPDATE → PRONTO, WHERE estado = REGISTRADO
+alt linha alterada
+  H -> DB : commit()
+  H -> H : avisar.accept("pedidos")
+  H --> C : 200 {id}
+  C -->> D : mensagem e concluirAcao() → atualizar()
+else UPDATE sem linha correspondente
+  H -> DB : rollback()
+  H --> C : 409 se UPDATE não retornou linha
+end
+
+W -> A : Meus pedidos
+A ->> C : Salao.pedidos() → executar() → Api.listar()
+C -> H : GET /pedidos [GARCOM]
+H -> DB : ConsultaPedidos.listar() filtra pelo código do garçom
+H --> C : 200 lista
+C -->> A : exibe pedidos próprios
+W -> A : abre detalhes e escolhe Marcar entregue [PRONTO]
+A ->> C : Salao.detalhes() → executar() → Api.alterar()
+C -> H : POST /pedidos/{id}/entregar
+H -> B : entregar(conexao, id, garcom)
+B -> DB : UPDATE → ENTREGUE, WHERE PRONTO e autor = garçom
+alt linha alterada
+  H -> DB : commit()
+  H -> H : avisar.accept("pedidos")
+  H --> C : 200 {id}
+  C -->> A : aviso e pedidos()
+else sem linha correspondente
+  H -> DB : rollback()
+  H --> C : 409 {erro}
+  C -->> A : erro()
+end
+legend bottom left
+  Secoes.pedidos() oferece a ação PRONTO após carregar a lista.
+  PRONTO é do pedido inteiro. As tarefas de impressão seguem estados próprios.
+endlegend
+@enduml

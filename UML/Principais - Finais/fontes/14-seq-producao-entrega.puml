@@ -1,0 +1,78 @@
+@startuml
+title ATLAS · Sequência — Produção, preparo e entrega
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+actor Gerente as G
+participant "Secoes / Operacoes\nDesktop" as D
+participant "ApiHttp / Dados" as H
+participant "BancoImpressoes /\nBancoPedidos" as B
+database PostgreSQL as PG
+participant "Salao / Api\nAndroid" as A
+actor Garçom as W
+
+G -> D : abre Produção e impressão
+D -> H : GET /impressoes
+H -> B : BancoImpressoes.listar()
+B -> PG : JOIN itens por pedido e setor
+B --> H : tarefas com comprovantes filtrados por setor
+H --> D : 200 lista
+D --> G : exibe setores BAR e/ou COZINHA
+opt gerente confirma despacho manual do comprovante
+  ref over D, PG : seleção de fila, reserva e resultado · ver diagrama 10
+end
+
+G -> D : em Pedidos, marca um REGISTRADO como pronto
+D -> H : POST /pedidos/{id}/pronto
+H -> B : BancoPedidos.marcarPronto()
+B -> PG : UPDATE para PRONTO condicionado a REGISTRADO
+alt altera pedido
+  H -> PG : commit()
+  H --> D : 200 {id}
+else sem linha correspondente
+  H -> PG : rollback()
+  H --> D : 409
+end
+
+W -> A : abre Meus pedidos
+A -> H : GET /pedidos
+H -> PG : ConsultaPedidos.listar() filtra pelo autor
+H --> A : 200 lista do garçom
+W -> A : marca pedido próprio PRONTO como entregue
+A -> H : POST /pedidos/{id}/entregar
+H -> B : BancoPedidos.entregar()
+B -> PG : UPDATE para ENTREGUE condicionado a PRONTO e autoria
+alt altera pedido
+  H -> PG : commit()
+  H --> A : 200 {id}
+else sem linha correspondente
+  H -> PG : rollback()
+  H --> A : 409
+end
+legend bottom left
+  O comprovante é por setor. PRONTO e ENTREGUE são estados do pedido inteiro.
+  Registrar preparo e entrega independe da situação das tarefas de impressão.
+endlegend
+@enduml

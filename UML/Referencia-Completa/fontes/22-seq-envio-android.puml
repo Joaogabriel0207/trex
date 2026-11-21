@@ -1,0 +1,86 @@
+@startuml
+title ATLAS | Montagem, envio e recuperação no Android
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Garçom as G
+participant Montagem as M
+participant Rascunho as R
+database SharedPreferences as SP
+participant "Atendimento" as A
+participant "Api (Android)" as C
+participant "ApiHttp" as H
+
+G -> M : abrir cardápio na comanda ABERTA
+M -> R : iniciar(comandaId, mesaNumero)
+M -> A : atualizarProdutos() → executar()
+A ->> C : listar("/produtos") no executor
+C -> H : GET /produtos [somente disponíveis]
+H --> C : 200 catálogo
+C -->> M : callback na interface → filtrar()
+loop edição enquanto rascunho livre
+  G -> M : editar item, quantidade e observação
+  M -> R : editar(id, nome, preco, quantidade, observacao)
+  R -> SP : salvar() → commit() por servidor/código
+end
+G -> M : confirmar Enviar pedido\nou Confirmar resultado do envio
+M -> R : prepararEnvio()
+alt rascunho vazio ou falha ao gravar
+  R --> M : IllegalStateException
+  M -> A : erro()
+else conteúdo local gravado
+  R -> R : gerar UUID só se ainda não há chave
+  R -> SP : salvar() → commit() antes da rede
+  R --> M : {chave, comandaId, itens enviados}
+  M -> M : resumo() com chave pendente e edição bloqueada
+  M -> A : executar(trabalho, sucesso, falha)
+  A ->> C : alterar("/pedidos", corpo)
+  C -> H : POST /pedidos, Bearer
+  ref over H : Registro e idempotência do Backend
+  alt HTTP 200 e resposta lida
+    H --> C : {id}
+    C -->> A : callback de sucesso
+    A -> R : limpar()
+    R -> SP : remove(dono).commit()
+    A --> G : aviso confirmado e Salao.pedidos()
+  else HTTP 400, 404, 409 ou 422
+    H --> C : {erro}
+    C -->> A : callback de falha
+    A -> R : recusar() → zera a chave e grava o conteúdo
+    A -> M : resumo() volta a permitir edição
+  else HTTP 401
+    H --> C : {erro}
+    C -->> A : Recusa(401)
+    A -> A : voltarAoLogin() preservando rascunho
+  else perda de resposta, erro de rede ou outra recusa
+    C -->> A : callback de falha
+    A -> M : resumo() mantém chave e itens
+    A --> G : oferece repetir a confirmação depois
+  end
+end
+legend bottom left
+  A repetição é outro POST com a mesma chave e itens. O preço exibido localmente é estimado.
+  O Backend responde {id}. O callback lê o ID e limpa o rascunho.
+  Se o commit da limpeza falha, Atendimento.terminar() trata o erro e a chave permanece.
+endlegend
+@enduml

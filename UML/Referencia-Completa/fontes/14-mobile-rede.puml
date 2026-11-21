@@ -1,0 +1,143 @@
+@startuml
+title ATLAS | Classes do Android · HTTP, configuração e MQTT
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+
+package "br.ufg.atlas.mobile" {
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:15
+  class "Api" as J_mobile_Api <<pacote, final>> {
+    ' linha 24
+    {field} -base: String [final]
+    ' linha 25
+    {field} -token: String [final]
+    ' linha 27
+    {method} ~Api(base: String, token: String)
+    ' linha 32
+    {method} ~listar(rota: String): JSONArray throws IOException, JSONException
+    ' linha 36
+    {method} ~obter(rota: String): JSONObject throws IOException, JSONException
+    ' linha 40
+    {method} ~alterar(rota: String, dados: JSONObject): JSONObject throws IOException, JSONException
+    ' linha 44
+    {method} -enviar(rota: String, dados: JSONObject): String throws IOException
+    ' linha 79
+    {method} -ler(entrada: InputStream): String throws IOException
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Api.java:16
+  class "Api.Recusa" as J_mobile_Api_Recusa <<pacote, static, final>> {
+    ' linha 17
+    {field} ~status: int [final]
+    ' linha 18
+    {method} ~Recusa(status: int, mensagem: String)
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Configuracao.java:11
+  class "Configuracao" as J_mobile_Configuracao <<pacote, final>> {
+    ' linha 12
+    {field} -preferencias: SharedPreferences [final]
+    ' linha 13
+    {field} {static} -senhaMqtt: String
+    ' linha 15
+    {method} ~Configuracao(contexto: Context)
+    ' linha 19
+    {method} ~servidor(): String
+    ' linha 21
+    {method} ~broker(): String
+    ' linha 27
+    {method} ~usuarioMqtt(): String
+    ' linha 28
+    {method} ~senhaMqtt(): char[]
+    ' linha 30
+    {method} ~editar(tela: Activity): void
+    ' linha 63
+    {method} {static} -valido(texto: String, primeiro: String, segundo: String): boolean
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Notificacoes.java:14
+  class "Notificacoes" as J_mobile_Notificacoes <<pacote, final>> {
+    ' linha 20
+    {field} -fila: ScheduledExecutorService [final]
+    ' linha 21
+    {field} -configuracao: Configuracao [final]
+    ' linha 22
+    {field} -ouvinte: Ouvinte [final]
+    ' linha 23
+    {field} -cliente: MqttClient
+    ' linha 24
+    {field} -encerrado: boolean [volatile]
+    ' linha 26
+    {method} ~Notificacoes(configuracao: Configuracao, ouvinte: Ouvinte)
+    ' linha 32
+    {method} -conectar(): void
+    ' linha 67
+    {method} ~encerrar(): void
+    ' linha 73
+    {method} -fecharCliente(): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Notificacoes.java:15
+  interface "Notificacoes.Ouvinte" as J_mobile_Notificacoes_Ouvinte <<pacote, static>> {
+    ' linha 16
+    {method} +conexao(conectada: boolean): void
+    ' linha 17
+    {method} +atualizar(): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Notificacoes.java:38
+  class "Notificacoes.java:38" as J_mobile_Notificacoes_anon_38 <<anônima>> {
+    ' linha 39
+    {method} +connectionLost(motivo: Throwable): void
+    ' linha 42
+    {method} +messageArrived(topico: String, mensagem: MqttMessage): void
+    ' linha 45
+    {method} +deliveryComplete(entrega: IMqttDeliveryToken): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:234
+  class "Atendimento.java:234" as J_mobile_Atendimento_anon_234 <<anônima>> {
+    ' linha 235
+    {method} +atualizar(): void
+    ' linha 236
+    {method} +conexao(conectada: boolean): void
+  }
+
+  ' Mobile/app/src/main/java/br/ufg/atlas/mobile/Atendimento.java:21
+  class "Atendimento" as J_mobile_Atendimento <<public, final, referência>> #EDF3F9
+}
+
+class "java.io.IOException" as Ext_IOException <<externo>> #EEF1F5
+
+interface "org.eclipse.paho.client.mqttv3.MqttCallback" as Ext_MqttCallback <<externo>> #EEF1F5
+
+J_mobile_Api_Recusa --|> Ext_IOException
+J_mobile_Notificacoes_anon_38 ..|> Ext_MqttCallback
+J_mobile_Atendimento_anon_234 ..|> J_mobile_Notificacoes_Ouvinte
+J_mobile_Api ..> J_mobile_Api_Recusa : enviar()
+J_mobile_Notificacoes --> "1" J_mobile_Configuracao : configuracao
+J_mobile_Notificacoes --> "1" J_mobile_Notificacoes_Ouvinte : ouvinte
+J_mobile_Notificacoes ..> J_mobile_Notificacoes_anon_38 : conectar() cria
+J_mobile_Notificacoes_anon_38 ..> J_mobile_Notificacoes_Ouvinte : callbacks delegados
+J_mobile_Atendimento ..> J_mobile_Atendimento_anon_234 : onStart() cria
+J_mobile_Atendimento --> "0..1" J_mobile_Notificacoes : notificacoes
+@enduml

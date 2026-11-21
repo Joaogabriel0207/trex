@@ -1,0 +1,70 @@
+@startuml
+title ATLAS | Conferência e repetição de impressão
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Gerente as G
+participant FilaProducao as F
+participant "ControlePainel / Ambiente" as A
+participant ClienteHttp as C
+participant "ApiHttp / Dados" as H
+participant BancoImpressoes as B
+database PostgreSQL as DB
+
+G -> F : conferir(tarefa em EM_TENTATIVA ou INCERTA)
+F --> G : ChoiceDialog de resultado (sem opção pré-selecionada)
+note over G, F
+  EM_TENTATIVA: desconhecido, envio confirmado na fila, ou falha antes do envio.
+  INCERTA: apenas confirmação de envio ou falha.
+end note
+alt operador cancela
+  F --> G : encerra diálogo sem alterar tarefa
+else operador informa resultado
+  G -> F : confirma escolha
+  F -> A : painel.executar()
+  A ->> F : tarefa no executor chama resultado(..., true)
+  F -> C : api.alterar("POST", rota + "/resultado", dados)
+  C -> H : POST /impressoes/{id}/resultado
+  H -> B : registrarResultado(conexao, gerente, id, dados)
+  B -> B : Campos valida estado, tentativa e detalhe obrigatório
+  B -> DB : UPDATE para a mesma tentativa\nEM_TENTATIVA ou INCERTA para ENVIADA/FALHA,\nou repetição exata aceita
+  alt atualização aceita
+    H -> DB : commit()
+    H --> C : 200 {id}
+    C -->> F : mensagem e atualizar a listagem
+    opt FALHA e nova tentativa iniciada pelo gerente
+      G -> F : Tentar novamente
+      ref over F, DB : reservar com repetir=true e número anterior\nver sequência de impressão
+    end
+  else solicitação inválida ou tarefa mudou
+    H -> DB : rollback()
+    H --> C : 400 ou 409 {erro}
+    C -->> A : Operação não concluída
+  end
+end
+legend bottom left
+  A conferência explícita permite outro gerente e registra confirmado_por.
+  A repetição exata confere estado, detalhe e autor do resultado, além de id e tentativa.
+  Conferir altera o registro no Backend. O reenvio à fila exige outra ação e outra reserva.
+endlegend
+@enduml

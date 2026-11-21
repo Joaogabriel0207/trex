@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="azul">#0347FF</color>
+    <color name="texto">#15253A</color>
+    <color name="secundario">#536579</color>
+    <color name="linha">#E1E8F1</color>
+    <color name="livre">#176447</color>
+    <color name="conta">#86510C</color>
+    <color name="login">#103083</color>
+    <color name="papel">#FFFFFF</color>
+    <style name="TemaAtlas" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/azul</item>
+        <item name="android:windowBackground">@color/papel</item>
+        <item name="android:statusBarColor">@color/papel</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorPrimary">@color/azul</item>
+    </style>
+    <style name="Rotulo">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/texto</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="Campo" parent="Rotulo">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <style name="Acao" parent="@android:style/Widget.Material.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:background">@drawable/botao</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textColor">@color/papel</item>
+    </style>
+</resources>

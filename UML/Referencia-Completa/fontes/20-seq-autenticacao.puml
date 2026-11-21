@@ -1,0 +1,105 @@
+@startuml
+title ATLAS | Autenticação e autorização
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Funcionário as F
+participant "Login (Android) /\nControleLogin (Desktop)" as UI
+participant "Api / ClienteHttp" as C
+participant ApiHttp as H
+participant "BancoFuncionarios" as B
+database "PostgreSQL" as DB
+participant Senhas as S
+participant Sessoes as T
+participant Permissoes as P
+
+F -> UI : entrar()
+UI ->> C : tarefa no executor de rede
+C -> H : POST /login {codigo, senha}
+H -> H : handle() → atender() → lerCorpo() → entrar()
+H -> B : autenticar(conexao, codigo, senha)
+B -> DB : SELECT funcionário ativo e senha_hash
+DB --> B : registro ou ausência
+opt funcionário ativo encontrado
+  B -> S : conferir(senha, senhaHash)
+  S --> B : resultado PBKDF2
+end
+B --> H : Funcionario ou null
+alt credenciais inválidas, inclusive funcionário inativo
+  H --> C : 401 {erro}
+else cargo sem acesso operacional
+  H --> C : 403 {erro}
+else GARCOM, GERENTE ou CAIXA ativo
+  H -> T : abrir(codigo)
+  T --> H : UUID em memória, validade de 8 h
+  H --> C : 200 {codigo, nome, cargo, token}
+  alt cargo aceito no cliente
+    C -->> UI : Android: runOnUiThread() → startActivity(Atendimento)\nDesktop: Platform.runLater() → Ambiente.painel()
+  else cargo incompatível com o cliente
+    C -> H : POST /sair, Bearer token
+    H -> T : identificar(token), encerrar(token)
+    H --> C : 200 {}
+    C -->> UI : informa requisito de cargo
+  end
+end
+
+== Requisição protegida após login compatível ==
+C -> H : HTTP com Authorization: Bearer token
+alt Bearer ausente ou malformado
+  H --> C : 401 {erro}
+else Bearer presente
+  H -> T : identificar(token)
+  alt sessão ausente ou vencida
+    T --> H : ErroHttp(401)
+    H --> C : 401 {erro}
+  else sessão válida
+    T --> H : codigo
+    alt POST /sair
+      H -> T : encerrar(token)
+      H --> C : 200 {}
+    else operação de negócio
+      H -> B : buscarAtivo(conexao, codigo)
+      B -> DB : SELECT funcionário ativo
+      B --> H : Funcionario ou null
+      alt funcionário tornou-se inativo
+        H -> T : encerrar(token)
+        H --> C : 401 {erro}
+      else funcionário ativo
+        H -> P : verificar(pessoa, metodo, partes)
+        alt papel recusado / rota desconhecida
+          P --> H : ErroHttp 403 / 404
+          H -> DB : rollback()
+          H --> C : 403 / 404 {erro}
+        else operação permitida
+          ref over H, DB : Dados.executar() e transação\nver sequência de comunicação
+        end
+      end
+    end
+  end
+end
+legend bottom left
+  Login.entrar() exige GARCOM no Android. ControleLogin.entrar() exige GERENTE ou CAIXA.
+  ApiHttp.atender() revoga sessões do funcionário editado depois de confirmar PUT /funcionarios/{codigo}.
+  ApiHttp.handle() também converte corpo inválido em 400 e corpo acima de 128 KiB em 413.
+endlegend
+@enduml

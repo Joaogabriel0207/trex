@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.ufg.atlas.desktop.ControleListagem" spacing="10">
+    <HBox fx:id="acoes" alignment="CENTER_LEFT" spacing="8">
+        <Button fx:id="acaoPrincipal" styleClass="principal" />
+        <Button fx:id="acaoSecundaria" />
+        <Button fx:id="acaoTerciaria" />
+    </HBox>
+    <TableView fx:id="tabela" VBox.vgrow="ALWAYS">
+        <placeholder><Label text="Nenhum registro encontrado."/></placeholder>
+    </TableView>
+</VBox>

@@ -1,0 +1,52 @@
+@startuml
+title ATLAS | Estados persistidos da tarefa de impressão
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+hide empty description
+[*] --> PENDENTE : BancoPedidos.registrar()\npor setor presente
+PENDENTE --> EM_TENTATIVA : reservar() [tentativa = 0]
+EM_TENTATIVA --> ENVIADA : resultado ENVIADA
+EM_TENTATIVA --> INCERTA : resultado INCERTA
+EM_TENTATIVA --> FALHA : resultado FALHA
+INCERTA --> ENVIADA : conferido=true, com detalhe
+INCERTA --> FALHA : conferido=true, com detalhe
+FALHA --> EM_TENTATIVA : reservar() [repetir=true,\ntentativa atual]
+note right of EM_TENTATIVA
+  Toda reserva incrementa tentativa.
+  Em EM_TENTATIVA: responsável ou
+  gerente com conferência explícita.
+  O Desktop envia ENVIADA/INCERTA
+  automaticamente após tentar print().
+end note
+note right of ENVIADA
+  Retorno normal de print()
+  ou conferência da fila.
+end note
+legend bottom left
+  registrarResultado() aceita repetição exata com a mesma tentativa, estado, detalhe e autor.
+  Esse caminho preserva o estado. A fila física não participa da transação JDBC.
+endlegend
+@enduml

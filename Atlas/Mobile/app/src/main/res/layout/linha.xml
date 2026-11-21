@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_vertical"
+    android:paddingHorizontal="16dp" android:paddingVertical="10dp" android:minHeight="56dp">
+    <TextView android:id="@+id/titulo" style="@style/Rotulo" android:textStyle="bold"/>
+    <TextView android:id="@+id/detalhe" style="@style/Rotulo" android:textColor="@color/secundario" android:textSize="14sp"/>
+</LinearLayout>

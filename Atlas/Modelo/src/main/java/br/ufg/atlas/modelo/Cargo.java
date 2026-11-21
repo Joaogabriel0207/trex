@@ -1,0 +1,5 @@
+package br.ufg.atlas.modelo;
+
+public enum Cargo {
+    GERENTE, GARCOM, CAIXA, MAITRE, SOMMELIER, PADEIRO, BARMAN, CUMIM, COZINHEIRO, AUXILIAR_LIMPEZA
+}

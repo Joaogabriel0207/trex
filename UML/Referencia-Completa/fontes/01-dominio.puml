@@ -1,0 +1,74 @@
+@startuml
+title ATLAS | Domínio Java em memória
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Restaurante.java:5
+  class "Restaurante" as J_modelo_Restaurante <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Mesa.java:3
+  class "Mesa" as J_modelo_Mesa <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cardapio.java:6
+  class "Cardapio" as J_modelo_Cardapio <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Comanda.java:6
+  class "Comanda" as J_modelo_Comanda <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pedido.java:6
+  class "Pedido" as J_modelo_Pedido <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pagamento.java:3
+  class "Pagamento" as J_modelo_Pagamento <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/ItemPedido.java:3
+  class "ItemPedido" as J_modelo_ItemPedido <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final>>
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Produto.java:3
+  class "Produto" as J_modelo_Produto <<public, final>>
+}
+
+J_modelo_Restaurante *-- "0..*" J_modelo_Mesa : mesas
+J_modelo_Restaurante *-- "1" J_modelo_Cardapio : cardapio
+J_modelo_Mesa --> "0..1" J_modelo_Comanda : comanda
+J_modelo_Comanda --> "1" J_modelo_Mesa : mesa
+J_modelo_Comanda "0..1" *-- "0..*" J_modelo_Pedido : pedidos / comanda
+J_modelo_Comanda --> "0..1" J_modelo_Pagamento : pagamento
+J_modelo_Pedido --> "1..100" J_modelo_ItemPedido : itens (posições)
+J_modelo_Pedido --> "1" J_modelo_Funcionario : responsavel
+J_modelo_ItemPedido --> "1" J_modelo_Produto : produto
+J_modelo_Cardapio --> "0..*" J_modelo_Produto : produtos
+
+note bottom of J_modelo_Mesa
+  A mesa mantém a última referência.
+  getComandaAberta() oculta a encerrada.
+end note
+note bottom of J_modelo_Pedido
+  A lista é copiada. As referências aos itens
+  podem ser compartilhadas entre pedidos.
+end note
+@enduml

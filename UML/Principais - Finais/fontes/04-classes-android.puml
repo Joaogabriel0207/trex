@@ -1,0 +1,115 @@
+@startuml
+title ATLAS · Classes — Android
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 36
+skinparam ranksep 47
+
+hide circle
+!pragma layout smetana
+' O espaço após as multiplicidades separa os rótulos das pontas das setas.
+hide empty members
+package "br.ufg.atlas.mobile" {
+  class Login {
+    -entrar(): void
+  }
+  class Atendimento {
+    ~comandaId: long
+    ~pagina: Pagina
+    #onStart(): void
+    #onStop(): void
+    -atualizarPorEvento(): void
+  }
+  class Salao {
+    ~mesas(): void
+    ~comanda(): void
+    ~pedidos(): void
+  }
+  class Montagem {
+    ~cardapio(): void
+    ~resumo(): void
+    -enviar(): void
+  }
+  class Rascunho {
+    -chave: String
+    -itens: JSONArray
+    ~prepararEnvio(): JSONObject
+    ~recusar(): void
+    ~limpar(): void
+  }
+  class Linhas
+  class "Linhas.Linha" as Linha
+  class Api {
+    -base: String
+    -token: String
+    ~listar(rota: String): JSONArray
+    ~obter(rota: String): JSONObject
+    ~alterar(rota: String, dados: JSONObject): JSONObject
+  }
+  class "Api.Recusa" as Recusa {
+    ~status: int
+  }
+  class Configuracao
+  class Notificacoes
+  interface "Notificacoes.Ouvinte" as Ouvinte {
+    +atualizar(): void
+    +conexao(conectada: boolean): void
+  }
+}
+class Activity <<Android>>
+abstract class BaseAdapter <<Android>>
+interface SharedPreferences <<Android>>
+class IOException <<JDK>>
+Login -up-|> Activity
+Atendimento -left-|> Activity
+' Guia invisível para afastar a herança do título do pacote.
+Login -[hidden]down-> Atendimento
+Login ..> Atendimento : abre via Intent
+Login --> Configuracao : configuracao
+Login ..> Api : login
+Atendimento --> "0..1  " Salao : salao
+Atendimento --> "0..1  " Montagem : montagem
+Atendimento --> "0..1  " Api : api
+Atendimento --> "0..1  " Rascunho : rascunho
+Atendimento --> "0..1  " Notificacoes : notificacoes
+Atendimento ..> Linhas : cria adaptador
+Notificacoes --> "1  " Configuracao : configuracao
+Notificacoes --> "1  " Ouvinte : ouvinte
+Atendimento ..> Ouvinte : cria callback
+Montagem ..> Rascunho : prepara e conserva envio
+Salao ..> Montagem : abre cardápio
+Api ..> Recusa : lança por status HTTP
+Recusa --|> IOException
+Linhas --|> BaseAdapter
+Linhas --> "0..*  " Linha : linhas
+Rascunho --> "1  " SharedPreferences : arquivo
+Configuracao --> "1  " SharedPreferences : preferencias
+legend bottom left
+  Atendimento dispara a rede em executor e usa Handler para voltar à interface.
+  Pagina, Operacao e Receber são tipos internos. Dados auxilia rótulos e JSON.
+endlegend
+@enduml

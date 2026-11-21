@@ -1,0 +1,176 @@
+@startuml
+title ATLAS | Classes de verificação existentes
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.servidor" {
+  ' Backend/src/test/java/br/ufg/atlas/servidor/BancoDeTeste.java:12
+  class "BancoDeTeste" as J_servidor_BancoDeTeste <<pacote, final>> {
+    ' linha 13
+    {field} -esquema: String [final]
+    ' linha 14
+    {field} -administracao: ConexaoBanco [final]
+    ' linha 15
+    {field} -isolado: ConexaoBanco [final]
+    ' linha 16
+    {field} -criado: boolean
+    ' linha 18
+    {method} ~BancoDeTeste(endereco: String, usuario: String, senha: String)
+    ' linha 24
+    {method} ~preparar(arquivo: Path, senhaGerente: String): ConexaoBanco throws Exception
+    ' linha 47
+    {method} +close(): void throws SQLException
+  }
+
+  ' Backend/src/test/java/br/ufg/atlas/servidor/TesteFluxoHttp.java:22
+  class "TesteFluxoHttp" as J_servidor_TesteFluxoHttp <<public, final>> {
+    ' linha 23
+    {field} -cliente: HttpClient [final]
+    ' linha 24
+    {field} -base: String [final]
+    ' linha 25
+    {field} -senha: String [final]
+    ' linha 27
+    {method} -TesteFluxoHttp(porta: int, senha: String)
+    ' linha 32
+    {method} {static} +main(argumentos: String[]): void throws Exception
+    ' linha 59
+    {method} -testar(): void throws Exception
+    ' linha 114
+    {method} -verificarImpressao(gerente: String, supervisao: String, pedido: int): void throws Exception
+    ' linha 148
+    {method} -entrar(codigo: String): String throws Exception
+    ' linha 155
+    {method} -cadastrarFuncionario(gerente: String, codigo: String, cargo: String): String throws Exception
+    ' linha 166
+    {method} {static} -produto(nome: String, setor: String, preco: int): String
+    ' linha 176
+    {method} -cadastrarProduto(gerente: String, nome: String, setor: String, preco: int): int throws Exception
+    ' linha 180
+    {method} {static} -pedido(comanda: int, chave: UUID, itens: String): String
+    ' linha 184
+    {method} {static} -id(elemento: JsonElement): int
+    ' linha 186
+    {method} {static} -exigir(condicao: boolean, etapa: String): void
+    ' linha 190
+    {method} -consultar(rota: String, token: String): JsonElement throws Exception
+    ' linha 194
+    {method} -listar(rota: String, token: String): JsonArray throws Exception
+    ' linha 198
+    {method} -enviar(rota: String, token: String, corpo: String): JsonElement throws Exception
+    ' linha 202
+    {method} -enviarDuasVezes(token: String, corpo: String): int throws Exception
+    ' linha 212
+    {method} -requisitar(metodo: String, rota: String, token: String, corpo: String, esperado: int): JsonElement throws Exception
+    ' linha 218
+    {method} -preparar(metodo: String, rota: String, token: String, corpo: String): HttpRequest
+    ' linha 230
+    {method} -lerResposta(resposta: HttpResponse<String>, metodo: String, rota: String, esperado: int): JsonElement
+  }
+
+  ' Backend/src/test/java/br/ufg/atlas/servidor/TesteServico.java:17
+  class "TesteServico" as J_servidor_TesteServico <<public, final>> {
+    ' linha 18
+    {field} {static} -verificacoes: int
+    ' linha 20
+    {method} {static} -conferir(resultado: boolean): void
+    ' linha 25
+    {method} {static} -esperarErro(status: int, acao: Runnable): void
+    ' linha 35
+    {method} {static} -testarAcesso(): void
+    ' linha 61
+    {method} {static} -resposta(servidor: URI, metodo: String, caminho: String, corpo: String, token: String, esperado: int): void throws Exception
+    ' linha 72
+    {method} {static} +main(argumentos: String[]): void throws Exception
+    ' linha 17
+    {method} +TesteServico() [implícito]
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ConexaoBanco.java:8
+  class "ConexaoBanco" as J_servidor_ConexaoBanco <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ApiHttp.java:18
+  class "ApiHttp" as J_servidor_ApiHttp <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Sessoes.java:9
+  class "Sessoes" as J_servidor_Sessoes <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Permissoes.java:5
+  class "Permissoes" as J_servidor_Permissoes <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Senhas.java:11
+  class "Senhas" as J_servidor_Senhas <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ErroHttp.java:3
+  class "ErroHttp" as J_servidor_ErroHttp <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoFuncionarios.java:10
+  class "BancoFuncionarios" as J_servidor_BancoFuncionarios <<pacote, final, referência>> #EDF3F9
+}
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/test/java/br/ufg/atlas/modelo/TesteDominio.java:7
+  class "TesteDominio" as J_modelo_TesteDominio <<public, final>> {
+    ' linha 8
+    {field} {static} -verificacoes: int
+    ' linha 10
+    {method} {static} -conferir(condicao: boolean, caso: String): void
+    ' linha 15
+    {method} {static} -exigirRecusa(operacao: Runnable): void
+    ' linha 25
+    {method} {static} +main(argumentos: String[]): void
+    ' linha 7
+    {method} +TesteDominio() [implícito]
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Restaurante.java:5
+  class "Restaurante" as J_modelo_Restaurante <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pedido.java:6
+  class "Pedido" as J_modelo_Pedido <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Comanda.java:6
+  class "Comanda" as J_modelo_Comanda <<public, final, referência>> #EDF3F9
+}
+
+interface "java.lang.AutoCloseable" as Ext_AutoCloseable <<externo>> #EEF1F5
+
+J_servidor_BancoDeTeste ..|> Ext_AutoCloseable
+J_servidor_BancoDeTeste --> "1" J_servidor_ConexaoBanco : administracao
+J_servidor_BancoDeTeste --> "1" J_servidor_ConexaoBanco : isolado
+J_servidor_BancoDeTeste ..> J_servidor_BancoFuncionarios : preparar()
+J_servidor_TesteFluxoHttp ..> J_servidor_BancoDeTeste : main()
+J_servidor_TesteFluxoHttp ..> J_servidor_ConexaoBanco : main()
+J_servidor_TesteFluxoHttp ..> J_servidor_ApiHttp : main()
+J_servidor_TesteFluxoHttp ..> J_servidor_Sessoes : main()
+J_servidor_TesteServico ..> J_servidor_ApiHttp : main()
+J_servidor_TesteServico ..> J_servidor_ConexaoBanco : main()
+J_servidor_TesteServico ..> J_servidor_Sessoes
+J_servidor_TesteServico ..> J_servidor_Permissoes
+J_servidor_TesteServico ..> J_servidor_Senhas
+J_servidor_TesteServico ..> J_servidor_ErroHttp
+J_modelo_TesteDominio ..> J_modelo_Restaurante : main()
+J_modelo_TesteDominio ..> J_modelo_Pedido : main()
+J_modelo_TesteDominio ..> J_modelo_Comanda : main()
+@enduml

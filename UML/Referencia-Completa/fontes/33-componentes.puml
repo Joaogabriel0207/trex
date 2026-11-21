@@ -1,0 +1,73 @@
+@startuml
+title ATLAS | Componentes e interfaces em operação
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+top to bottom direction
+package "Clientes ATLAS" {
+  component "Android\nMobile · Java e layouts XML" as Android
+  component "Desktop\nJavaFX · FXML" as Desktop {
+    component "Fila de produção\nSecoes e FilaProducao" as Fila
+    component "Impressão local\nImpressao" as Print
+  }
+}
+package "Servidor ATLAS" {
+  component "Backend Java\nServidor e ApiHttp" as Backend
+  component "Operações JDBC\nDados, Banco*, Consultas" as Data
+  component "Publicador\nAvisosMqtt" as Pub
+  component "Modelo Java\nvalidação e permissões" as Modelo
+}
+interface "API HTTP/JSON\nBearer nas rotas protegidas" as API
+queue "Broker MQTT\nMosquitto compatível" as Broker
+database "PostgreSQL\nBancoDeDados/esquema.sql" as Pg
+interface "Java Print Service\nPRINTABLE" as JPS
+queue "Fila do SO\nnome configurado para BAR" as Bar
+queue "Fila do SO\nnome configurado para COZINHA" as Coz
+
+Android ..> API : Api · HttpURLConnection
+Desktop ..> API : ClienteHttp · HttpClient\nFila: listar, reservar, informar resultado
+API -- Backend : fornecida por ApiHttp
+Android ..> Broker : Paho subscribe · Notificacoes
+Desktop ..> Broker : Paho subscribe · AvisosMqtt
+Backend ..> Data : Dados.executar()
+Backend ..> Pub : Consumer<String>
+Backend ..> Modelo : Funcionario
+Data ..> Modelo : regras e objetos
+Data --> Pg : JDBC / pgJDBC
+Pub --> Broker : publish · atlas/eventos\nQoS 1, sem retenção
+Fila ..> Print : localizar() / enviar()
+Print ..> JPS : lookup / print()
+JPS -- Bar
+JPS -- Coz
+note bottom of JPS
+  Filas são nomes configuráveis em Preferencias
+  e podem coincidir. A interface confirma o
+  retorno de print(), sem telemetria do papel.
+end note
+note bottom of Pg
+  A API coordena transações.
+  Sessoes mantém tokens em memória no Backend.
+end note
+@enduml

@@ -1,0 +1,157 @@
+@startuml
+title ATLAS | Classes do Backend · inicialização, HTTP e MQTT
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.servidor" {
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Servidor.java:13
+  class "Servidor" as J_servidor_Servidor <<public, final>> {
+    ' linha 14
+    {method} -Servidor()
+    ' linha 16
+    {method} {static} +main(argumentos: String[]): void throws Exception
+    ' linha 42
+    {method} {static} -criarGerente(banco: ConexaoBanco): void throws SQLException
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ApiHttp.java:18
+  class "ApiHttp" as J_servidor_ApiHttp <<pacote, final>> {
+    ' linha 19
+    {field} {static} -LIMITE_CORPO: int [final]
+    ' linha 20
+    {field} -json: Gson [final]
+    ' linha 21
+    {field} -banco: ConexaoBanco [final]
+    ' linha 22
+    {field} -sessoes: Sessoes [final]
+    ' linha 23
+    {field} -avisar: Consumer<String> [final]
+    ' linha 25
+    {method} ~ApiHttp(banco: ConexaoBanco, sessoes: Sessoes, avisar: Consumer<String>)
+    ' linha 31
+    {method} +handle(troca: HttpExchange): void throws IOException
+    ' linha 68
+    {method} -atender(troca: HttpExchange): JsonElement throws IOException, SQLException
+    ' linha 106
+    {method} -entrar(corpo: JsonObject): JsonObject throws SQLException
+    ' linha 124
+    {method} -lerCorpo(troca: HttpExchange): JsonObject throws IOException
+    ' linha 133
+    {method} {static} -erroBanco(falha: SQLException): ErroHttp
+    ' linha 143
+    {method} {static} -erro(mensagem: String): JsonObject
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/AvisosMqtt.java:14
+  class "AvisosMqtt" as J_servidor_AvisosMqtt <<pacote, final>> {
+    ' linha 15
+    {field} -executor: ScheduledExecutorService [final]
+    ' linha 16
+    {field} -cliente: MqttClient [final]
+    ' linha 17
+    {field} -opcoes: MqttConnectOptions [final]
+    ' linha 18
+    {field} -falhaInformada: boolean
+    ' linha 20
+    {method} ~AvisosMqtt() throws MqttException
+    ' linha 32
+    {method} ~iniciar(): void
+    ' linha 36
+    {method} -conectar(): void [synchronized]
+    ' linha 48
+    {method} ~notificar(recurso: String): void
+    ' linha 57
+    {method} -publicar(recurso: String): void [synchronized]
+    ' linha 67
+    {method} -informarFalha(): void
+    ' linha 72
+    {method} +close(): void [synchronized]
+    ' linha 83
+    {method} -desconectar(): void
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ConexaoBanco.java:8
+  class "ConexaoBanco" as J_servidor_ConexaoBanco <<pacote, final>> {
+    ' linha 18
+    {field} -endereco: String [final]
+    ' linha 19
+    {field} -acesso: Properties [final]
+    ' linha 21
+    {method} ~ConexaoBanco()
+    ' linha 26
+    {method} ~ConexaoBanco(endereco: String, usuario: String, senha: String)
+    ' linha 34
+    {method} ~abrir(): Connection throws SQLException
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ErroHttp.java:3
+  class "ErroHttp" as J_servidor_ErroHttp <<pacote, final>> {
+    ' linha 4
+    {field} -status: int [final]
+    ' linha 6
+    {method} ~ErroHttp(status: int, mensagem: String)
+    ' linha 11
+    {method} ~getStatus(): int
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Sessoes.java:9
+  class "Sessoes" as J_servidor_Sessoes <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Permissoes.java:5
+  class "Permissoes" as J_servidor_Permissoes <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Dados.java:11
+  class "Dados" as J_servidor_Dados <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoFuncionarios.java:10
+  class "BancoFuncionarios" as J_servidor_BancoFuncionarios <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Campos.java:7
+  class "Campos" as J_servidor_Campos <<pacote, final, referência>> #EDF3F9
+}
+
+interface "com.sun.net.httpserver.HttpHandler" as Ext_HttpHandler <<externo>> #EEF1F5
+
+interface "java.lang.AutoCloseable" as Ext_AutoCloseable <<externo>> #EEF1F5
+
+class "java.lang.RuntimeException" as Ext_RuntimeException <<externo>> #EEF1F5
+
+J_servidor_ApiHttp ..|> Ext_HttpHandler
+J_servidor_AvisosMqtt ..|> Ext_AutoCloseable
+J_servidor_ErroHttp --|> Ext_RuntimeException
+J_servidor_Servidor ..> J_servidor_ApiHttp : main() cria
+J_servidor_Servidor ..> J_servidor_AvisosMqtt : main() cria
+J_servidor_Servidor ..> J_servidor_Sessoes : main() cria
+J_servidor_Servidor ..> J_servidor_ConexaoBanco : main() cria
+J_servidor_Servidor ..> J_servidor_BancoFuncionarios : criarGerente()
+J_servidor_ApiHttp --> J_servidor_ConexaoBanco : banco
+J_servidor_ApiHttp --> J_servidor_Sessoes : sessoes
+J_servidor_ApiHttp --> Ext_Consumer : avisar
+interface "java.util.function.Consumer<String>" as Ext_Consumer <<externo>> #EEF1F5
+J_servidor_ApiHttp ..> J_servidor_ErroHttp : handle()
+J_servidor_ApiHttp ..> J_servidor_Dados : executar()
+J_servidor_ApiHttp ..> J_servidor_Campos : entrar()
+J_servidor_ApiHttp ..> J_servidor_BancoFuncionarios : entrar() / atender()
+J_servidor_ApiHttp ..> J_servidor_Permissoes : verificar()
+@enduml

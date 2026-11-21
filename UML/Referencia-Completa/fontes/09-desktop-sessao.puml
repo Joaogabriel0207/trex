@@ -1,0 +1,187 @@
+@startuml
+title ATLAS | Classes do Desktop · aplicação, sessão e transporte
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+
+package "br.ufg.atlas.desktop" {
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/AtlasDesktop.java:12
+  class "AtlasDesktop" as J_desktop_AtlasDesktop <<public>> {
+    ' linha 13
+    {field} -ambiente: Ambiente
+    ' linha 15
+    {method} +start(janela: Stage): void throws IOException
+    ' linha 27
+    {method} {static} ~recurso(nome: String): URL
+    ' linha 33
+    {method} {static} ~carregar(nome: String): FXMLLoader
+    ' linha 37
+    {method} {static} ~cena(raiz: Parent): Scene
+    ' linha 43
+    {method} +stop(): void
+    ' linha 48
+    {method} {static} +main(argumentos: String[]): void
+    ' linha 12
+    {method} +AtlasDesktop() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Ambiente.java:18
+  class "Ambiente" as J_desktop_Ambiente <<pacote, final>> {
+    ' linha 19
+    {field} ~janela: Stage [final]
+    ' linha 20
+    {field} ~preferencias: Preferencias [final]
+    ' linha 21
+    {field} -rede: ExecutorService [final]
+    ' linha 26
+    {field} ~api: ClienteHttp
+    ' linha 27
+    {field} ~funcionario: JsonObject
+    ' linha 28
+    {field} -painel: ControlePainel
+    ' linha 29
+    {field} -sessao: int
+    ' linha 31
+    {method} ~Ambiente(janela: Stage)
+    ' linha 33
+    {method} ~login(): void throws IOException
+    ' linha 46
+    {method} ~painel(usuario: JsonObject): void throws IOException
+    ' linha 55
+    {method} -exibir(raiz: Parent): void
+    ' linha 60
+    {method} <U+007E><T> executar(tarefa: Callable<T>, sucesso: Consumer<T>, erro: Consumer<String>): void
+    ' linha 80
+    {method} ~sair(): void
+    ' linha 89
+    {method} -voltarAoLogin(): void
+    ' linha 94
+    {method} ~configurar(gerencia: boolean): void
+    ' linha 118
+    {method} ~mensagem(titulo: String, texto: String): void
+    ' linha 127
+    {method} ~detalhar(titulo: String, descricao: String, texto: String): void
+    ' linha 141
+    {method} ~encerrar(): void
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControleLogin.java:7
+  class "ControleLogin" as J_desktop_ControleLogin <<public>> {
+    ' linha 8
+    {field} -codigo: TextField
+    ' linha 9
+    {field} -senha: PasswordField
+    ' linha 10
+    {field} -botaoEntrar: Button
+    ' linha 10
+    {field} -botaoConexao: Button
+    ' linha 11
+    {field} -aviso: Label
+    ' linha 12
+    {field} -ambiente: Ambiente
+    ' linha 14
+    {method} ~preparar(ambiente: Ambiente): void
+    ' linha 16
+    {method} -focarSenha(): void
+    ' linha 17
+    {method} -configurar(): void
+    ' linha 19
+    {method} -entrar(): void
+    ' linha 46
+    {method} -falha(mensagem: String): void
+    ' linha 7
+    {method} +ControleLogin() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ClienteHttp.java:15
+  class "ClienteHttp" as J_desktop_ClienteHttp <<pacote, final>> {
+    ' linha 16
+    {field} -http: HttpClient [final]
+    ' linha 17
+    {field} -endereco: String [final]
+    ' linha 18
+    {field} -token: String
+    ' linha 20
+    {method} ~ClienteHttp(endereco: String)
+    ' linha 24
+    {method} ~entrar(codigo: String, senha: String): JsonObject throws Exception
+    ' linha 33
+    {method} ~listar(caminho: String): JsonArray throws Exception
+    ' linha 37
+    {method} ~consultar(caminho: String): JsonObject throws Exception
+    ' linha 41
+    {method} ~alterar(metodo: String, caminho: String, dados: JsonObject): JsonObject throws Exception
+    ' linha 45
+    {method} -requisitar(metodo: String, caminho: String, corpo: JsonObject): JsonElement throws Exception
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ClienteHttp.java:76
+  class "ClienteHttp.SessaoExpirada" as J_desktop_ClienteHttp_SessaoExpirada <<pacote, static, final>> {
+    ' linha 77
+    {method} ~SessaoExpirada(mensagem: String)
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Preferencias.java:6
+  class "Preferencias" as J_desktop_Preferencias <<pacote, final>> {
+    ' linha 7
+    {field} -dados: Preferences [final]
+    ' linha 9
+    {method} ~servidor(): String
+    ' linha 13
+    {method} ~impressora(setor: String): String
+    ' linha 17
+    {method} ~salvar(endereco: String, bar: String, cozinha: String): void
+    ' linha 29
+    {method} ~enderecoMqtt(): String
+    ' linha 6
+    {method} ~Preferencias() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControlePainel.java:19
+  class "ControlePainel" as J_desktop_ControlePainel <<public, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControleConfiguracoes.java:10
+  class "ControleConfiguracoes" as J_desktop_ControleConfiguracoes <<public, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Dados.java:12
+  class "Dados" as J_desktop_Dados <<pacote, final, referência>> #EDF3F9
+}
+
+abstract class "javafx.application.Application" as Ext_Application <<externo>> #EEF1F5
+
+class "java.io.IOException" as Ext_IOException <<externo>> #EEF1F5
+
+J_desktop_AtlasDesktop --|> Ext_Application
+J_desktop_ClienteHttp_SessaoExpirada --|> Ext_IOException
+J_desktop_AtlasDesktop --> "0..1" J_desktop_Ambiente : ambiente
+J_desktop_Ambiente ..> J_desktop_AtlasDesktop : carregar() / cena()
+J_desktop_Ambiente *-- "1" J_desktop_Preferencias : preferencias
+J_desktop_Ambiente --> "0..1" J_desktop_ClienteHttp : api
+J_desktop_Ambiente --> "0..1" J_desktop_ControlePainel : painel
+J_desktop_Ambiente ..> J_desktop_ControleLogin : login() / FXML
+J_desktop_Ambiente ..> J_desktop_ControleConfiguracoes : configurar() / FXML
+J_desktop_Ambiente ..> J_desktop_ClienteHttp_SessaoExpirada : executar()
+J_desktop_ControleLogin --> J_desktop_Ambiente : ambiente
+J_desktop_ControleLogin ..> J_desktop_ClienteHttp : entrar()
+J_desktop_ControleLogin ..> J_desktop_Dados
+J_desktop_ClienteHttp ..> J_desktop_ClienteHttp_SessaoExpirada : requisitar()
+@enduml

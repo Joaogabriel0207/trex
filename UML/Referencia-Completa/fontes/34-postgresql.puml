@@ -1,0 +1,125 @@
+@startuml
+title ATLAS | Esquema PostgreSQL · tabelas e cardinalidades
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+hide circle
+skinparam linetype polyline
+entity funcionarios {
+  * codigo : varchar(32) <<PK>>
+  --
+  * nome : varchar(120)
+  * cargo : varchar(24)
+  * ativo : boolean
+  * senha_hash : text
+}
+entity mesas {
+  * id : integer <<PK, identity>>
+  --
+  * numero : integer <<UQ>>
+}
+entity categorias {
+  * id : integer <<PK, identity>>
+  --
+  * nome : varchar(120) <<UQ>>
+}
+entity produtos {
+  * id : integer <<PK, identity>>
+  --
+  * nome : varchar(120)
+  * categoria_id : integer <<FK>>
+  * preco_centavos : bigint
+  * setor : varchar(10)
+  * disponivel : boolean
+}
+entity comandas {
+  * id : integer <<PK, identity>>
+  --
+  * mesa_id : integer <<FK>>
+  * funcionario_codigo : varchar(32) <<FK>>
+  * estado : varchar(20)
+  * abertura : timestamptz = current_timestamp
+    encerramento : timestamptz
+}
+entity pedidos {
+  * id : integer <<PK, identity>>
+  --
+  * comanda_id : integer <<FK>>
+  * funcionario_codigo : varchar(32) <<FK>>
+  * chave : uuid
+  * estado : varchar(20)
+  * criacao : timestamptz = current_timestamp
+}
+entity itens_pedido {
+  * id : integer <<PK, identity>>
+  --
+  * pedido_id : integer <<FK>>
+  * produto_id : integer <<FK>>
+  * nome : varchar(120)
+  * setor : varchar(10)
+  * preco_centavos : bigint
+  * quantidade : integer
+  * observacao : varchar(240) = ''
+}
+entity pagamentos {
+  * comanda_id : integer <<PK, FK>>
+  --
+  * funcionario_codigo : varchar(32) <<FK>>
+  * valor_centavos : bigint
+  * forma : varchar(20)
+  * registro : timestamptz = current_timestamp
+}
+entity tarefas_impressao {
+  * id : integer <<PK, identity>>
+  --
+  * pedido_id : integer <<FK>>
+  * setor : varchar(10)
+  * estado : varchar(20)
+  * tentativa : integer = 0
+    responsavel_codigo : varchar(32) <<FK>>
+    confirmado_por : varchar(32) <<FK>>
+  * detalhe : varchar(500) = ''
+}
+mesas ||--o{ comandas : mesa_id
+funcionarios ||--o{ comandas : abertura
+funcionarios ||--o{ pedidos : autoria
+comandas ||--o{ pedidos : comanda_id
+categorias ||--o{ produtos : categoria_id
+produtos ||--o{ itens_pedido : produto_id
+pedidos ||--o{ itens_pedido : pedido_id
+comandas ||--o| pagamentos : comanda_id
+funcionarios ||--o{ pagamentos : recebimento
+pedidos ||--o{ tarefas_impressao : pedido_id
+funcionarios |o--o{ tarefas_impressao : responsavel_codigo
+funcionarios |o--o{ tarefas_impressao : confirmado_por
+legend bottom left
+  * obrigatório · PK chave primária · FK chave estrangeira · UQ único
+  comandas: índice único parcial (mesa_id) em estado diferente de ENCERRADA.
+  pedidos: UNIQUE (funcionario_codigo, chave).
+  tarefas_impressao: UNIQUE (pedido_id, setor) e CHECK do setor (BAR ou COZINHA)
+  limitam a 0..2 por pedido no SQL. O lançamento JDBC gera 1..2 para pedidos aceitos.
+  O SQL não exige 1..100 linhas por pedido. Esse limite vem do registro Java.
+endlegend
+@enduml

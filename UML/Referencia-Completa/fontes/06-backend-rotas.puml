@@ -1,0 +1,123 @@
+@startuml
+title ATLAS | Classes do Backend · rotas, entrada e acesso JDBC
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.servidor" {
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Dados.java:11
+  class "Dados" as J_servidor_Dados <<pacote, final>> {
+    ' linha 12
+    {method} -Dados()
+    ' linha 14
+    {method} {static} ~executar(conexao: Connection, funcionario: Funcionario, metodo: String, partes: String[], corpo: JsonObject): JsonElement throws SQLException
+    ' linha 61
+    {method} {static} -rotaInexistente(): ErroHttp
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Campos.java:7
+  class "Campos" as J_servidor_Campos <<pacote, final>> {
+    ' linha 8
+    {method} -Campos()
+    ' linha 10
+    {method} {static} ~texto(corpo: JsonObject, campo: String, limite: int): String
+    ' linha 18
+    {method} {static} ~observacao(corpo: JsonObject, campo: String): String
+    ' linha 25
+    {method} {static} -cadeia(corpo: JsonObject, campo: String): String
+    ' linha 35
+    {method} {static} ~senha(corpo: JsonObject): String
+    ' linha 42
+    {method} {static} ~inteiro(corpo: JsonObject, campo: String): long
+    ' linha 54
+    {method} {static} ~positivo(corpo: JsonObject, campo: String): int
+    ' linha 60
+    {method} {static} ~identificador(texto: String): int
+    ' linha 70
+    {method} {static} ~logico(corpo: JsonObject, campo: String): boolean
+    ' linha 78
+    {method} {static} ~chave(corpo: JsonObject): UUID
+    ' linha 89
+    {method} {static} ~invalido(campo: String): ErroHttp
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Consultas.java:15
+  class "Consultas" as J_servidor_Consultas <<pacote, final>> {
+    ' linha 16
+    {method} -Consultas()
+    ' linha 18
+    {method} {static} ~preparar(conexao: Connection, sql: String, parametros: Object...): PreparedStatement throws SQLException
+    ' linha 32
+    {method} {static} ~executar(conexao: Connection, sql: String, parametros: Object...): int throws SQLException
+    ' linha 38
+    {method} {static} ~um(conexao: Connection, sql: String, parametros: Object...): JsonObject throws SQLException
+    ' linha 48
+    {method} {static} ~lista(conexao: Connection, sql: String, parametros: Object...): JsonArray throws SQLException
+    ' linha 59
+    {method} {static} -lerLinha(linha: ResultSet): JsonObject throws SQLException
+    ' linha 81
+    {method} {static} -nomeJson(coluna: String): String
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoSalao.java:10
+  class "BancoSalao" as J_servidor_BancoSalao <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoFuncionarios.java:10
+  class "BancoFuncionarios" as J_servidor_BancoFuncionarios <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoComandas.java:13
+  class "BancoComandas" as J_servidor_BancoComandas <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoPedidos.java:16
+  class "BancoPedidos" as J_servidor_BancoPedidos <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ConsultaPedidos.java:13
+  class "ConsultaPedidos" as J_servidor_ConsultaPedidos <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoImpressoes.java:11
+  class "BancoImpressoes" as J_servidor_BancoImpressoes <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ErroHttp.java:3
+  class "ErroHttp" as J_servidor_ErroHttp <<pacote, final, referência>> #EDF3F9
+}
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cargo.java:3
+  enum "Cargo" as J_modelo_Cargo <<public, referência>> #EDF3F9
+}
+
+J_servidor_Dados ..> J_servidor_BancoSalao
+J_servidor_Dados ..> J_servidor_BancoFuncionarios
+J_servidor_Dados ..> J_servidor_BancoComandas
+J_servidor_Dados ..> J_servidor_BancoPedidos
+J_servidor_Dados ..> J_servidor_ConsultaPedidos
+J_servidor_Dados ..> J_servidor_BancoImpressoes
+J_servidor_Dados ..> J_servidor_Campos
+J_servidor_Dados ..> J_servidor_ErroHttp
+J_servidor_Dados ..> J_modelo_Funcionario
+J_servidor_Dados ..> J_modelo_Cargo
+J_servidor_Campos ..> J_servidor_ErroHttp : invalido()
+@enduml

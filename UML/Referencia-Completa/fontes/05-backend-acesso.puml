@@ -1,0 +1,134 @@
+@startuml
+title ATLAS | Classes do Backend · sessão, credenciais e autorização
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.servidor" {
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Sessoes.java:9
+  class "Sessoes" as J_servidor_Sessoes <<pacote, final>> {
+    ' linha 11
+    {field} -sessoes: Map<String, Sessao> [final]
+    ' linha 12
+    {field} -relogio: Clock [final]
+    ' linha 14
+    {method} ~Sessoes(relogio: Clock)
+    ' linha 16
+    {method} ~abrir(codigo: String): String [synchronized]
+    ' linha 24
+    {method} ~identificar(token: String): String [synchronized]
+    ' linha 33
+    {method} ~encerrar(token: String): void [synchronized]
+    ' linha 35
+    {method} ~revogar(codigo: String): void [synchronized]
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Sessoes.java:10
+  class "Sessoes.Sessao" as J_servidor_Sessoes_Sessao <<private, record, static, final>> {
+    ' linha 10
+    codigo: String [componente]
+    ' linha 10
+    validade: long [componente]
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Permissoes.java:5
+  class "Permissoes" as J_servidor_Permissoes <<pacote, final>> {
+    ' linha 6
+    {method} -Permissoes()
+    ' linha 8
+    {method} {static} ~verificar(pessoa: Funcionario, metodo: String, partes: String[]): void
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Senhas.java:11
+  class "Senhas" as J_servidor_Senhas <<pacote, final>> {
+    ' linha 12
+    {field} {static} -ITERACOES: int [final]
+    ' linha 13
+    {field} {static} -ALEATORIO: SecureRandom [final]
+    ' linha 15
+    {method} -Senhas()
+    ' linha 17
+    {method} {static} ~gerar(senha: String): String
+    ' linha 28
+    {method} {static} ~conferir(senha: String, registro: String): boolean
+    ' linha 43
+    {method} {static} -derivar(senha: String, sal: byte[], iteracoes: int): byte[]
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoFuncionarios.java:10
+  class "BancoFuncionarios" as J_servidor_BancoFuncionarios <<pacote, final>> {
+    ' linha 11
+    {method} -BancoFuncionarios()
+    ' linha 13
+    {method} {static} ~autenticar(conexao: Connection, codigo: String, senha: String): Funcionario throws SQLException
+    ' linha 21
+    {method} {static} ~buscarAtivo(conexao: Connection, codigo: String): Funcionario throws SQLException
+    ' linha 27
+    {method} {static} -funcionario(linha: JsonObject): Funcionario
+    ' linha 32
+    {method} {static} ~criarPrimeiroGerente(conexao: Connection, codigo: String, nome: String, senha: String): void throws SQLException
+    ' linha 47
+    {method} {static} ~listar(conexao: Connection): JsonArray throws SQLException
+    ' linha 52
+    {method} {static} ~cadastrar(conexao: Connection, dados: JsonObject): JsonObject throws SQLException
+    ' linha 60
+    {method} {static} ~editar(conexao: Connection, codigo: String, dados: JsonObject): JsonObject throws SQLException
+    ' linha 79
+    {method} {static} -lerCadastro(codigo: String, dados: JsonObject): Funcionario
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ErroHttp.java:3
+  class "ErroHttp" as J_servidor_ErroHttp <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Campos.java:7
+  class "Campos" as J_servidor_Campos <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Consultas.java:15
+  class "Consultas" as J_servidor_Consultas <<pacote, final, referência>> #EDF3F9
+}
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cargo.java:3
+  enum "Cargo" as J_modelo_Cargo <<public, referência>> #EDF3F9
+}
+
+J_servidor_Sessoes *-- "0..*" J_servidor_Sessoes_Sessao : sessoes (token → sessão)
+J_servidor_Sessoes ..> J_servidor_ErroHttp : identificar()
+J_servidor_Permissoes ..> J_servidor_ErroHttp : verificar()
+J_servidor_Permissoes ..> J_modelo_Funcionario : verificar()
+J_servidor_BancoFuncionarios ..> J_modelo_Funcionario : instancia
+J_servidor_BancoFuncionarios ..> J_modelo_Cargo : valueOf()
+J_servidor_BancoFuncionarios ..> J_servidor_Senhas : gera e confere hash
+J_servidor_BancoFuncionarios ..> J_servidor_ErroHttp : criarPrimeiroGerente() / editar()
+J_servidor_BancoFuncionarios ..> J_servidor_Campos : entrada
+J_servidor_BancoFuncionarios ..> J_servidor_Consultas : JDBC
+
+note right of J_servidor_Sessoes_Sessao
+  Construtor canônico private Sessao(String, long)
+  Acessores públicos codigo() e validade()
+  são gerados pelo Java com o record.
+end note
+@enduml

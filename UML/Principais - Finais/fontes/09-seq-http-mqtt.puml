@@ -1,0 +1,71 @@
+@startuml
+title ATLAS · Sequência — HTTP, MQTT e notificações
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+hide footbox
+autonumber
+skinparam maxMessageSize 190
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #5B7893
+  LifeLineBorderColor #9BACBC
+  GroupBackgroundColor #F8FAFD
+  GroupBorderColor #9BACBC
+  DividerBackgroundColor #EAF2FA
+  DividerBorderColor #92ABC2
+  MessageAlign left
+}
+
+participant "Android / Desktop" as Clientes
+participant ApiHttp as HTTP
+participant Dados as Rota
+database PostgreSQL as PG
+participant "AvisosMqtt\nBackend" as Pub
+queue "Broker MQTT" as Broker
+
+Clientes -> HTTP : rota protegida com Bearer
+HTTP -> HTTP : identifica sessão pelo token
+HTTP -> PG : abre conexão, desabilita auto-commit\ne consulta funcionário ativo
+HTTP -> HTTP : verifica permissão da rota
+HTTP -> Rota : executar(conexao, pessoa, metodo, partes, corpo)
+Rota -> PG : consulta ou alteração pelas classes JDBC
+alt operação recusada ou falha SQL
+  HTTP -> PG : rollback() quando já iniciou transação
+  HTTP --> Clientes : status e JSON de erro
+else operação concluída
+  HTTP -> PG : commit()
+  opt método diferente de GET
+    HTTP -> Pub : Consumer.accept(recurso) → notificar(recurso)
+    opt conectado e executor disponível
+      Pub ->> Pub : agenda publicar(recurso)
+    end
+  end
+  par resposta HTTP
+    HTTP --> Clientes : 200 e resultado da operação
+  else executor MQTT · quando agendado e conectado
+    Pub -> Broker : PUBLISH atlas/eventos\nnome do recurso UTF-8 · QoS 1 · sem retenção
+    Broker -->> Clientes : entrega a assinantes conectados
+  end
+end
+
+== Atualização do cliente ==
+opt aviso recebido ou assinatura concluída
+  Clientes -> Clientes : Desktop agrupa avisos e atualiza painel\nAndroid atualiza tela visível, exceto resumo
+  Clientes -> HTTP : GET conforme área, com Bearer
+  HTTP --> Clientes : dados atuais
+end
+legend bottom left
+  O fluxo pressupõe Bearer válido. O Backend publica "atualizacao" ao conectar. Pode perder avisos durante a desconexão.
+  Desktop também consulta a cada 45 s. Android permite Atualizar e consulta ao voltar ao primeiro plano,
+  com a mesma ressalva do resumo. A confirmação de negócio vem pela API.
+endlegend
+@enduml

@@ -1,0 +1,115 @@
+@startuml
+title ATLAS · Classes — Desktop JavaFX
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 36
+skinparam ranksep 47
+
+hide circle
+!pragma layout smetana
+' O espaço após as multiplicidades separa os rótulos das pontas das setas.
+hide empty members
+package "br.ufg.atlas.desktop" {
+  class AtlasDesktop {
+    +start(janela: Stage): void
+    +stop(): void
+  }
+  class Ambiente {
+    ~login(): void
+    ~painel(usuario: JsonObject): void
+  }
+  class ControleLogin {
+    -entrar(): void
+  }
+  class ControlePainel {
+    ~atualizar(): void
+    ~encerrar(): void
+  }
+  class ControleInicio
+  class ControleListagem
+  class ControleConfiguracoes
+  class Secoes {
+    ~rota(): String
+    ~preencher(dados: JsonArray): void
+  }
+  class Operacoes {
+    ~comanda(id: String): void
+    ~pagar(linha: JsonObject): void
+    ~pronto(linha: JsonObject): void
+  }
+  class Formularios
+  class FilaProducao {
+    ~imprimir(tarefa: JsonObject): void
+    ~conferir(tarefa: JsonObject): void
+  }
+  class Impressao {
+    {static} ~localizar(nome: String): PrintService
+    {static} ~enviar(fila: PrintService, titulo: String, comprovante: String): void
+  }
+  class Preferencias
+  class ClienteHttp {
+    -token: String
+    ~entrar(codigo: String, senha: String): JsonObject
+    ~listar(caminho: String): JsonArray
+  }
+  class "ClienteHttp.SessaoExpirada" as SessaoExpirada
+  class AvisosMqtt {
+    ~iniciar(): void
+    ~encerrar(): void
+  }
+}
+abstract class "Application" as Aplicacao <<JavaFX>>
+class IOException <<JDK>>
+interface PrintService <<JDK>>
+AtlasDesktop -up-|> Aplicacao
+AtlasDesktop --> "0..1  " Ambiente : ambiente
+Ambiente --> "0..1  " ControlePainel : painel
+Ambiente *-- "1  " Preferencias : preferencias
+Ambiente --> "0..1  " ClienteHttp : api
+ControleLogin --> Ambiente : ambiente
+ControleLogin ..> ClienteHttp : entrar()
+Ambiente ..> ControleConfiguracoes : carrega FXML
+ControleConfiguracoes --> Ambiente : ambiente
+ControlePainel --> "0..1  " ControleInicio : resumo
+ControlePainel --> "0..1  " Secoes : listagem
+ControlePainel --> "0..1  " AvisosMqtt : notificacoes
+AvisosMqtt --> "1  " Preferencias : configuracao
+Secoes --> "1  " ControleListagem : tela
+Secoes *-- "1  " Operacoes : operacoes
+Secoes ..> FilaProducao : cria na produção
+Operacoes ..> Formularios : abre diálogos
+Operacoes ..> ClienteHttp
+FilaProducao ..> ClienteHttp : reserva e resultado
+FilaProducao ..> Impressao : localizar() e enviar()
+Impressao ..> PrintService : imprime via JPS
+ClienteHttp ..> SessaoExpirada : HTTP 401 com token
+SessaoExpirada --|> IOException
+legend bottom left
+  Ambiente executa as chamadas fora da thread da interface e retorna por Platform.runLater().
+  ControlePainel escolhe entre ControleInicio e Secoes. Dados contém formatação local.
+endlegend
+@enduml

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" spacing="10" prefWidth="398" styleClass="formulario">
+    <Label text="Código"/><TextField fx:id="codigo"/>
+    <Label text="Nome"/><TextField fx:id="nome"/>
+    <Label text="Cargo"/><ComboBox fx:id="cargo" maxWidth="Infinity"/>
+    <Label fx:id="rotuloSenha" text="Senha"/><PasswordField fx:id="senha"/>
+    <CheckBox fx:id="ativo" text="Funcionário ativo" selected="true"/>
+</VBox>

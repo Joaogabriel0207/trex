@@ -1,0 +1,6 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="104dp" android:orientation="vertical" android:background="@drawable/cartao"
+    android:gravity="center_vertical" android:padding="12dp">
+    <TextView android:id="@+id/titulo" style="@style/Rotulo" android:fontFamily="sans-serif-medium" android:textSize="20sp"/>
+    <TextView android:id="@+id/detalhe" style="@style/Rotulo" android:textSize="12sp" android:layout_marginTop="4dp"/>
+</LinearLayout>

@@ -1,0 +1,279 @@
+@startuml
+title ATLAS | Classes do Desktop · painel, navegação e listagem
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.desktop" {
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControlePainel.java:19
+  class "ControlePainel" as J_desktop_ControlePainel <<public>> {
+    ' linha 20
+    {field} -titulo: Label
+    ' linha 20
+    {field} -operador: Label
+    ' linha 20
+    {field} -aviso: Label
+    ' linha 21
+    {field} -inicio: Button
+    ' linha 21
+    {field} -pedidos: Button
+    ' linha 21
+    {field} -salao: Button
+    ' linha 21
+    {field} -cardapio: Button
+    ' linha 21
+    {field} -funcionarios: Button
+    ' linha 21
+    {field} -financeiro: Button
+    ' linha 21
+    {field} -producao: Button
+    ' linha 21
+    {field} -historico: Button
+    ' linha 21
+    {field} -configuracoes: Button
+    ' linha 22
+    {field} -area: StackPane
+    ' linha 23
+    {field} -ambiente: Ambiente
+    ' linha 24
+    {field} -atual: Button
+    ' linha 25
+    {field} -resumo: ControleInicio
+    ' linha 26
+    {field} -listagem: Secoes
+    ' linha 27
+    {field} -notificacoes: AvisosMqtt
+    ' linha 28
+    {field} -consultaPeriodica: Timeline
+    ' linha 29
+    {field} -agruparEventos: PauseTransition [final]
+    ' linha 30
+    {field} -revisao: int
+    ' linha 31
+    {field} -consultando: boolean
+    ' linha 31
+    {field} -operando: boolean
+    ' linha 31
+    {field} -consultaPendente: boolean
+    ' linha 31
+    {field} -encerrado: boolean
+    ' linha 33
+    {method} ~preparar(ambiente: Ambiente): void throws IOException
+    ' linha 53
+    {method} -navegar(evento: ActionEvent): void
+    ' linha 57
+    {method} -navegarPara(destino: Button): void
+    ' linha 62
+    {method} -mostrar(botao: Button): void throws IOException
+    ' linha 85
+    {method} ~atualizar(): void
+    ' linha 114
+    {method} -terminarConsulta(mensagem: String): void
+    ' linha 123
+    {method} <U+007E><T> executar(tarefa: Callable<T>, sucesso: Consumer<T>): void
+    ' linha 136
+    {method} -concluirAcao(): void
+    ' linha 142
+    {method} ~ambiente(): Ambiente
+    ' linha 144
+    {method} ~trocarHistorico(): void
+    ' linha 151
+    {method} -configurar(): void
+    ' linha 152
+    {method} -sair(): void
+    ' linha 154
+    {method} ~encerrar(): void
+    ' linha 19
+    {method} +ControlePainel() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControleInicio.java:9
+  class "ControleInicio" as J_desktop_ControleInicio <<public>> {
+    ' linha 10
+    {field} -ocupadas: Label
+    ' linha 10
+    {field} -pendentes: Label
+    ' linha 10
+    {field} -contas: Label
+    ' linha 11
+    {field} -cartaoSalao: Button
+    ' linha 11
+    {field} -cartaoPedidos: Button
+    ' linha 11
+    {field} -cartaoFinanceiro: Button
+    ' linha 13
+    {method} ~preparar(abrirSalao: Runnable, abrirPedidos: Runnable, abrirFinanceiro: Runnable): void
+    ' linha 19
+    {method} ~consultar(api: ClienteHttp): int[] throws Exception
+    ' linha 34
+    {method} ~exibir(totais: int[]): void
+    ' linha 9
+    {method} +ControleInicio() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControleListagem.java:15
+  class "ControleListagem" as J_desktop_ControleListagem <<public>> {
+    ' linha 16
+    {field} -tabela: TableView<JsonObject>
+    ' linha 17
+    {field} -acaoPrincipal: Button
+    ' linha 17
+    {field} -acaoSecundaria: Button
+    ' linha 17
+    {field} -acaoTerciaria: Button
+    ' linha 18
+    {field} -botoes: Button[]
+    ' linha 19
+    {field} -permissoes: Map<Button, Predicate<JsonObject>> [final]
+    ' linha 21
+    {method} -initialize(): void
+    ' linha 37
+    {method} ~coluna(titulo: String, valor: Function<JsonObject, String>): void
+    ' linha 43
+    {method} ~campo(titulo: String, nome: String): void
+    ' linha 47
+    {method} ~codigo(titulo: String, nome: String): void
+    ' linha 51
+    {method} ~dinheiro(titulo: String, nome: String): void
+    ' linha 55
+    {method} ~acao(posicao: int, titulo: String, permite: Predicate<JsonObject>, executar: Consumer<JsonObject>): void
+    ' linha 68
+    {method} ~limpar(): void
+    ' linha 77
+    {method} ~textoConformeSelecao(posicao: int, texto: Function<JsonObject, String>): void
+    ' linha 82
+    {method} ~preencher(dados: JsonArray, incluir: Predicate<JsonObject>): void
+    ' linha 15
+    {method} +ControleListagem() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Secoes.java:8
+  class "Secoes" as J_desktop_Secoes <<pacote, final>> {
+    ' linha 9
+    {field} -painel: ControlePainel [final]
+    ' linha 10
+    {field} -tela: ControleListagem [final]
+    ' linha 11
+    {field} -operacoes: Operacoes [final]
+    ' linha 12
+    {field} -gerente: boolean [final]
+    ' linha 13
+    {field} -secao: String [final]
+    ' linha 14
+    {field} -rota: String
+    ' linha 15
+    {field} -filtro: Predicate<JsonObject>
+    ' linha 16
+    {field} -pedidosHistoricos: boolean
+    ' linha 18
+    {method} ~Secoes(painel: ControlePainel, tela: ControleListagem, secao: String)
+    ' linha 36
+    {method} ~rota(): String
+    ' linha 37
+    {method} ~preencher(dados: JsonArray): void
+    ' linha 39
+    {method} ~alternarHistorico(): void
+    ' linha 47
+    {method} -pedidos(historico: boolean): void
+    ' linha 61
+    {method} -salao(): void
+    ' linha 71
+    {method} -cardapio(): void
+    ' linha 82
+    {method} -funcionarios(): void
+    ' linha 92
+    {method} -contas(historico: boolean): void
+    ' linha 104
+    {method} -producao(): void
+    ' linha 118
+    {method} {static} -estado(linha: JsonObject, esperado: String): boolean
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/AvisosMqtt.java:9
+  class "AvisosMqtt" as J_desktop_AvisosMqtt <<pacote, final>> {
+    ' linha 10
+    {field} -executor: ScheduledExecutorService [final]
+    ' linha 15
+    {field} -cliente: MqttClient
+    ' linha 16
+    {field} -inscrito: boolean
+    ' linha 17
+    {field} -configuracao: Preferencias [final]
+    ' linha 18
+    {field} -mudou: Runnable [final]
+    ' linha 20
+    {method} ~AvisosMqtt(configuracao: Preferencias, mudou: Runnable)
+    ' linha 25
+    {method} ~iniciar(): void
+    ' linha 29
+    {method} -acompanhar(): void
+    ' linha 57
+    {method} ~encerrar(): void
+    ' linha 63
+    {method} -fecharCliente(): void
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Ambiente.java:18
+  class "Ambiente" as J_desktop_Ambiente <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/AtlasDesktop.java:12
+  class "AtlasDesktop" as J_desktop_AtlasDesktop <<public, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Preferencias.java:6
+  class "Preferencias" as J_desktop_Preferencias <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ClienteHttp.java:15
+  class "ClienteHttp" as J_desktop_ClienteHttp <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Dados.java:12
+  class "Dados" as J_desktop_Dados <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Operacoes.java:10
+  class "Operacoes" as J_desktop_Operacoes <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/FilaProducao.java:12
+  class "FilaProducao" as J_desktop_FilaProducao <<pacote, final, referência>> #EDF3F9
+}
+
+J_desktop_ControlePainel --> J_desktop_Ambiente : ambiente
+J_desktop_ControlePainel --> "0..1" J_desktop_ControleInicio : resumo
+J_desktop_ControlePainel --> "0..1" J_desktop_Secoes : listagem
+J_desktop_ControlePainel --> "0..1" J_desktop_AvisosMqtt : notificacoes
+J_desktop_ControlePainel ..> J_desktop_AtlasDesktop : mostrar()
+J_desktop_ControlePainel ..> J_desktop_ClienteHttp
+J_desktop_ControlePainel ..> J_desktop_Dados
+J_desktop_Secoes --> "1" J_desktop_ControlePainel : painel
+J_desktop_Secoes --> "1" J_desktop_ControleListagem : tela
+J_desktop_Secoes *-- "1" J_desktop_Operacoes : operacoes
+J_desktop_Secoes ..> J_desktop_FilaProducao : producao() cria
+J_desktop_Secoes ..> J_desktop_Dados
+J_desktop_ControleInicio ..> J_desktop_ClienteHttp : consultar()
+J_desktop_ControleInicio ..> J_desktop_Dados
+J_desktop_ControleListagem ..> J_desktop_Dados
+J_desktop_AvisosMqtt --> "1" J_desktop_Preferencias : configuracao
+
+note right of J_desktop_ControlePainel
+  A navegação limpa resumo e listagem.
+  A área aberta atribui somente um deles.
+end note
+@enduml

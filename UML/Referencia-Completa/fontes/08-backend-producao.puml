@@ -1,0 +1,133 @@
+@startuml
+title ATLAS | Classes do Backend · pedidos e tarefas por setor
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.servidor" {
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoPedidos.java:16
+  class "BancoPedidos" as J_servidor_BancoPedidos <<pacote, final>> {
+    ' linha 17
+    {method} -BancoPedidos()
+    ' linha 19
+    {method} {static} ~registrar(conexao: Connection, garcom: Funcionario, dados: JsonObject): JsonObject throws SQLException
+    ' linha 64
+    {method} {static} -buscarChave(conexao: Connection, codigo: String, chave: UUID): JsonObject throws SQLException
+    ' linha 69
+    {method} {static} -conferirRepeticao(conexao: Connection, pedido: JsonObject, comandaId: int, itens: JsonArray): JsonObject throws SQLException
+    ' linha 89
+    {method} {static} -lerItem(elemento: JsonElement): JsonObject
+    ' linha 94
+    {method} {static} -chaveEmUso(): ErroHttp
+    ' linha 98
+    {method} {static} ~marcarPronto(conexao: Connection, id: int): JsonObject throws SQLException
+    ' linha 105
+    {method} {static} ~entregar(conexao: Connection, id: int, garcom: Funcionario): JsonObject throws SQLException
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ConsultaPedidos.java:13
+  class "ConsultaPedidos" as J_servidor_ConsultaPedidos <<pacote, final>> {
+    ' linha 14
+    {field} {static} -CONSULTA: String [final]
+    ' linha 19
+    {method} -ConsultaPedidos()
+    ' linha 21
+    {method} {static} ~listar(conexao: Connection, funcionario: Funcionario): JsonArray throws SQLException
+    ' linha 28
+    {method} {static} ~daComanda(conexao: Connection, comandaId: int): JsonArray throws SQLException
+    ' linha 32
+    {method} {static} -ler(conexao: Connection, filtro: String, parametros: Object...): JsonArray throws SQLException
+    ' linha 57
+    {method} {static} -cabecalho(linha: ResultSet): JsonObject throws SQLException
+    ' linha 70
+    {method} {static} -item(linha: ResultSet): JsonObject throws SQLException
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoImpressoes.java:11
+  class "BancoImpressoes" as J_servidor_BancoImpressoes <<pacote, final>> {
+    ' linha 12
+    {method} -BancoImpressoes()
+    ' linha 14
+    {method} {static} ~listar(conexao: Connection): JsonArray throws SQLException
+    ' linha 55
+    {method} {static} -umaLinha(campo: String): String
+    ' linha 59
+    {method} {static} ~reservar(conexao: Connection, gerente: Funcionario, id: int, dados: JsonObject): JsonObject throws SQLException
+    ' linha 71
+    {method} {static} ~registrarResultado(conexao: Connection, gerente: Funcionario, id: int, dados: JsonObject): JsonObject throws SQLException
+  }
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoComandas.java:13
+  class "BancoComandas" as J_servidor_BancoComandas <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/BancoSalao.java:10
+  class "BancoSalao" as J_servidor_BancoSalao <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Consultas.java:15
+  class "Consultas" as J_servidor_Consultas <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/Campos.java:7
+  class "Campos" as J_servidor_Campos <<pacote, final, referência>> #EDF3F9
+
+  ' Backend/src/main/java/br/ufg/atlas/servidor/ErroHttp.java:3
+  class "ErroHttp" as J_servidor_ErroHttp <<pacote, final, referência>> #EDF3F9
+}
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Comanda.java:6
+  class "Comanda" as J_modelo_Comanda <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pedido.java:6
+  class "Pedido" as J_modelo_Pedido <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/ItemPedido.java:3
+  class "ItemPedido" as J_modelo_ItemPedido <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Produto.java:3
+  class "Produto" as J_modelo_Produto <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cargo.java:3
+  enum "Cargo" as J_modelo_Cargo <<public, referência>> #EDF3F9
+}
+
+J_servidor_BancoPedidos ..> J_servidor_BancoComandas : bloquear() / total()
+J_servidor_BancoPedidos ..> J_servidor_BancoSalao : buscarParaPedido()
+J_servidor_BancoPedidos ..> J_modelo_Comanda : exigirAberta()
+J_servidor_BancoPedidos ..> J_modelo_Pedido : registrar() cria
+J_servidor_BancoPedidos ..> J_modelo_ItemPedido : registrar() cria
+J_servidor_BancoPedidos ..> J_modelo_Produto
+J_servidor_BancoPedidos ..> J_modelo_Funcionario
+J_servidor_BancoPedidos ..> J_servidor_Consultas
+J_servidor_BancoPedidos ..> J_servidor_Campos
+J_servidor_BancoPedidos ..> J_servidor_ErroHttp
+J_servidor_ConsultaPedidos ..> J_servidor_Consultas
+J_servidor_ConsultaPedidos ..> J_modelo_Funcionario
+J_servidor_ConsultaPedidos ..> J_modelo_Cargo
+J_servidor_BancoImpressoes ..> J_servidor_Consultas
+J_servidor_BancoImpressoes ..> J_servidor_Campos
+J_servidor_BancoImpressoes ..> J_servidor_ErroHttp
+J_servidor_BancoImpressoes ..> J_modelo_Funcionario
+@enduml

@@ -1,0 +1,91 @@
+@startuml
+title ATLAS | Impressão manual e registro do envio
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+hide footbox
+autonumber
+skinparam sequence {
+  ParticipantBackgroundColor #EDF5FC
+  ParticipantBorderColor #527490
+  LifeLineBorderColor #869CB1
+  GroupBackgroundColor #F7FAFE
+  GroupBorderColor #91A7BC
+  DividerBackgroundColor #E7F0F9
+  DividerBorderColor #8EA6BD
+  MessageAlign left
+}
+skinparam maxMessageSize 240
+
+actor Gerente as G
+participant FilaProducao as F
+participant "ControlePainel / Ambiente" as A
+participant ClienteHttp as C
+participant "ApiHttp / Dados" as H
+participant BancoImpressoes as B
+database PostgreSQL as DB
+participant Impressao as I
+queue "PrintService / DocPrintJob\nfila do sistema" as Q
+
+G -> F : imprimir(tarefa PENDENTE ou FALHA)
+F -> F : lê Preferencias.impressora(setor)
+alt sem nome configurado
+  F --> G : aviso de fila sem configuração
+else fila configurada
+  F --> G : pede confirmação de envio
+  opt gerente confirma
+    G -> F : Enviar
+    F -> A : executar(trabalho, sucesso)
+    A ->> F : tarefa no executor HTTP
+    F -> I : localizar(nome)
+    I -> Q : PrintServiceLookup.lookupPrintServices(PRINTABLE)
+    alt fila compatível ausente
+      I --> F : IllegalArgumentException
+      F -->> A : operação não concluída antes da reserva
+    else fila localizada
+      F -> C : alterar("POST", rota + "/reservar", reserva)
+      C -> H : POST /impressoes/{id}/reservar\n{} ou {repetir:true,tentativa anterior}
+      H -> B : reservar(conexao, gerente, id, dados)
+      B -> DB : UPDATE condicional PENDENTE/0 ou FALHA/atual\n→ EM_TENTATIVA, incrementa tentativa
+      alt reserva aceita e resposta recebida
+        H -> DB : commit()
+        H --> C : 200 {id,tentativa}
+        C --> F : número da tentativa
+        F -> I : enviar(fila, titulo, texto)
+        I -> Q : fila.createPrintJob() → trabalho.print(SimpleDoc, atributos)
+        alt retorno normal
+          Q --> I : retorno de print()
+          I --> F : define ENVIADA
+        else exceção durante o envio
+          I --> F : define INCERTA e solicita conferência
+        end
+        F -> F : resultado(api, rota, tentativa, estado, detalhe, false)
+        F -> C : api.alterar("POST", rota + "/resultado", dados)
+        C -> H : POST /impressoes/{id}/resultado
+        H -> B : registrarResultado(conexao, gerente, id, dados)
+        B -> DB : UPDATE condicionado à tentativa, estado e responsável
+        alt resultado aceito e resposta recebida
+          H -> DB : commit()
+          H --> C : 200 {id}
+          F -->> A : mostra detalhe local da tentativa
+        else recusa ou falha na resposta do resultado
+          F -->> A : informa conferir a fila e registrar resultado
+        end
+      else 409 na reserva ou resposta da reserva perdida
+        F -->> A : erro da reserva antes do envio ao SO
+      end
+    end
+  end
+end
+legend bottom left
+  BancoImpressoes.reservar() redefine detalhe e confirmado_por. A página é um Printable
+  que delega a Impressao.desenhar(). ENVIADA indica o retorno da chamada à fila do SO.
+  Resposta HTTP perdida pode ocultar um commit. A conferência usa o estado lido da API.
+endlegend
+@enduml

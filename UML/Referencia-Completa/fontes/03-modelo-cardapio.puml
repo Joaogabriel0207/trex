@@ -1,0 +1,175 @@
+@startuml
+title ATLAS | Classes do Modelo · catálogo, item e funcionário
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cardapio.java:6
+  class "Cardapio" as J_modelo_Cardapio <<public, final>> {
+    ' linha 7
+    {field} -produtos: ArrayList<Produto> [final]
+    ' linha 9
+    {method} +adicionar(produto: Produto): void
+    ' linha 16
+    {method} +buscarProduto(id: long): Produto
+    ' linha 23
+    {method} +getProdutos(): List<Produto>
+    ' linha 6
+    {method} +Cardapio() [implícito]
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Produto.java:3
+  class "Produto" as J_modelo_Produto <<public, final>> {
+    ' linha 4
+    {field} -id: long [final]
+    ' linha 5
+    {field} -nome: String [final]
+    ' linha 6
+    {field} -categoria: String [final]
+    ' linha 7
+    {field} -precoCentavos: long
+    ' linha 8
+    {field} -setor: Setor [final]
+    ' linha 9
+    {field} -disponivel: boolean
+    ' linha 11
+    {method} +Produto(id: long, nome: String, categoria: String, precoCentavos: long, setor: Setor, disponivel: boolean)
+    ' linha 23
+    {method} -validarTexto(texto: String): String
+    ' linha 30
+    {method} +alterarPreco(precoCentavos: long): void
+    ' linha 37
+    {method} +definirDisponibilidade(disponivel: boolean): void
+    ' linha 38
+    {method} +getId(): long
+    ' linha 39
+    {method} +getNome(): String
+    ' linha 40
+    {method} +getCategoria(): String
+    ' linha 41
+    {method} +getPrecoCentavos(): long
+    ' linha 42
+    {method} +getSetor(): Setor
+    ' linha 43
+    {method} +isDisponivel(): boolean
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Setor.java:3
+  enum "Setor" as J_modelo_Setor <<public>> {
+    ' linha 4
+    BAR
+    ' linha 4
+    COZINHA
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/ItemPedido.java:3
+  class "ItemPedido" as J_modelo_ItemPedido <<public, final>> {
+    ' linha 4
+    {field} -produto: Produto [final]
+    ' linha 5
+    {field} -quantidade: int [final]
+    ' linha 6
+    {field} -observacao: String [final]
+    ' linha 7
+    {field} -precoCentavos: long [final]
+    ' linha 9
+    {method} +ItemPedido(produto: Produto, quantidade: int, observacao: String)
+    ' linha 25
+    {method} +calcularSubtotal(): long
+    ' linha 26
+    {method} +getProduto(): Produto
+    ' linha 27
+    {method} +getNome(): String
+    ' linha 28
+    {method} +getSetor(): Setor
+    ' linha 29
+    {method} +getQuantidade(): int
+    ' linha 30
+    {method} +getObservacao(): String
+    ' linha 31
+    {method} +getPrecoCentavos(): long
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final>> {
+    ' linha 4
+    {field} -codigo: String [final]
+    ' linha 5
+    {field} -nome: String [final]
+    ' linha 6
+    {field} -cargo: Cargo [final]
+    ' linha 7
+    {field} -ativo: boolean [final]
+    ' linha 9
+    {method} +Funcionario(codigo: String, nome: String, cargo: Cargo, ativo: boolean)
+    ' linha 22
+    {method} +podeAdministrar(): boolean
+    ' linha 23
+    {method} +podeAtender(): boolean
+    ' linha 24
+    {method} +podeReceber(): boolean
+    ' linha 25
+    {method} +getCodigo(): String
+    ' linha 26
+    {method} +getNome(): String
+    ' linha 27
+    {method} +getCargo(): Cargo
+    ' linha 28
+    {method} +isAtivo(): boolean
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cargo.java:3
+  enum "Cargo" as J_modelo_Cargo <<public>> {
+    ' linha 4
+    GERENTE
+    ' linha 4
+    GARCOM
+    ' linha 4
+    CAIXA
+    ' linha 4
+    MAITRE
+    ' linha 4
+    SOMMELIER
+    ' linha 4
+    PADEIRO
+    ' linha 4
+    BARMAN
+    ' linha 4
+    CUMIM
+    ' linha 4
+    COZINHEIRO
+    ' linha 4
+    AUXILIAR_LIMPEZA
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pedido.java:6
+  class "Pedido" as J_modelo_Pedido <<public, final, referência>> #EDF3F9
+}
+
+J_modelo_Cardapio --> "0..*" J_modelo_Produto : produtos
+J_modelo_ItemPedido --> "1" J_modelo_Produto : produto
+J_modelo_Produto --> "1" J_modelo_Setor : setor
+J_modelo_Funcionario --> "1" J_modelo_Cargo : cargo
+J_modelo_Pedido --> "1..100" J_modelo_ItemPedido : itens (posições)
+J_modelo_Pedido --> "1" J_modelo_Funcionario : responsavel
+@enduml

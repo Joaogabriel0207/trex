@@ -1,0 +1,47 @@
+@startuml
+title ATLAS | Estados persistidos da comanda e situação da mesa
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #466785
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EEF5FC
+skinparam componentBorderColor #527490
+skinparam rectangleBackgroundColor #F6F9FD
+skinparam rectangleBorderColor #91A7BC
+skinparam usecaseBackgroundColor #EDF5FC
+skinparam usecaseBorderColor #527490
+skinparam stateBackgroundColor #EDF5FC
+skinparam stateBorderColor #527490
+skinparam classBackgroundColor #F6F9FD
+skinparam classBorderColor #527490
+skinparam classAttributeIconSize 0
+skinparam nodesep 32
+skinparam ranksep 48
+
+hide empty description
+[*] --> ABERTA : BancoComandas.abrir() cria
+ABERTA --> CONTA_SOLICITADA : solicitar() [garçom]
+CONTA_SOLICITADA --> CONTA_SOLICITADA : solicitar() novamente pela API
+CONTA_SOLICITADA --> ENCERRADA : pagar() [caixa ou gerente]\nvalor integral e commit
+note left of ABERTA
+  GET /mesas → OCUPADA.
+  Pedido novo exige ABERTA.
+end note
+note right of CONTA_SOLICITADA
+  GET /mesas → CONTA_SOLICITADA.
+  Reenvio idêntico de pedido anterior
+  ainda pode retornar o id original.
+end note
+note right of ENCERRADA
+  Mantida no histórico.
+  GET /mesas exclui esta comanda do vínculo.
+  Sem outra em atendimento, a mesa aparece LIVRE.
+end note
+@enduml

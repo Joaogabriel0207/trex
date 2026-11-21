@@ -1,0 +1,206 @@
+@startuml
+title ATLAS | Classes do Desktop · cadastros, financeiro e impressão
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+left to right direction
+
+package "br.ufg.atlas.desktop" {
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Operacoes.java:10
+  class "Operacoes" as J_desktop_Operacoes <<pacote, final>> {
+    ' linha 11
+    {field} -ambiente: Ambiente [final]
+    ' linha 12
+    {field} -painel: ControlePainel [final]
+    ' linha 13
+    {field} -janela: Window [final]
+    ' linha 15
+    {method} ~Operacoes(painel: ControlePainel)
+    ' linha 21
+    {method} ~editar(tipo: String, anterior: JsonObject): void
+    ' linha 41
+    {method} ~pagar(linha: JsonObject): void
+    ' linha 51
+    {method} ~pronto(linha: JsonObject): void
+    ' linha 56
+    {method} -salvar(metodo: String, rota: String, dados: JsonObject, mensagem: String): void
+    ' linha 61
+    {method} ~comanda(id: String): void
+    ' linha 68
+    {method} ~pedido(dados: JsonObject): void
+    ' linha 77
+    {method} ~comprovante(tarefa: JsonObject): void
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Formularios.java:14
+  class "Formularios" as J_desktop_Formularios <<pacote, final>> {
+    ' linha 15
+    {field} -arquivo: FXMLLoader [final]
+    ' linha 16
+    {field} -dialogo: Dialog<JsonObject> [final]
+    ' linha 17
+    {field} -confirmar: ButtonType [final]
+    ' linha 18
+    {field} -resultado: JsonObject
+    ' linha 20
+    {method} -Formularios(janela: Window, tela: String, titulo: String) throws IOException
+    ' linha 31
+    {method} -campo(nome: String): TextField
+    ' linha 32
+    {method} -caixa(nome: String): CheckBox
+    ' linha 34
+    {method} -opcoes(nome: String, valores: String...): ComboBox<String>
+    ' linha 46
+    {method} -solicitar(ler: Supplier<JsonObject>): Optional<JsonObject>
+    ' linha 58
+    {method} -obrigatorio(nome: String): String
+    ' linha 64
+    {method} {static} ~mesa(janela: Window): Optional<JsonObject> throws IOException
+    ' linha 77
+    {method} {static} ~produto(janela: Window, anterior: JsonObject): Optional<JsonObject> throws IOException
+    ' linha 104
+    {method} {static} ~funcionario(janela: Window, anterior: JsonObject): Optional<JsonObject> throws IOException
+    ' linha 129
+    {method} {static} ~pagamento(janela: Window, conta: JsonObject): Optional<JsonObject> throws IOException
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Formularios.java:38
+  class "Formularios.java:38" as J_desktop_Formularios_anon_38 <<anônima>> {
+    ' linha 39
+    {method} +toString(valor: String): String
+    ' linha 40
+    {method} +fromString(texto: String): String
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/FilaProducao.java:12
+  class "FilaProducao" as J_desktop_FilaProducao <<pacote, final>> {
+    ' linha 13
+    {field} -painel: ControlePainel [final]
+    ' linha 14
+    {field} -ambiente: Ambiente [final]
+    ' linha 16
+    {method} ~FilaProducao(painel: ControlePainel)
+    ' linha 21
+    {method} ~imprimir(tarefa: JsonObject): void
+    ' linha 63
+    {method} ~conferir(tarefa: JsonObject): void
+    ' linha 89
+    {method} {static} -resultado(api: ClienteHttp, rota: String, tentativa: int, estado: String, detalhe: String, conferido: boolean): JsonObject throws Exception
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Impressao.java:20
+  class "Impressao" as J_desktop_Impressao <<pacote, final>> {
+    ' linha 21
+    {method} {static} ~filas(): List<String>
+    ' linha 30
+    {method} {static} ~localizar(nome: String): PrintService
+    ' linha 37
+    {method} {static} ~enviar(fila: PrintService, titulo: String, comprovante: String): void throws PrintException
+    ' linha 45
+    {method} {static} -desenhar(grafico: Graphics, papel: PageFormat, pagina: int, texto: String): int
+    ' linha 20
+    {method} ~Impressao() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControleConfiguracoes.java:10
+  class "ControleConfiguracoes" as J_desktop_ControleConfiguracoes <<public>> {
+    ' linha 11
+    {field} -servidor: TextField
+    ' linha 12
+    {field} -impressoras: VBox
+    ' linha 13
+    {field} -bar: ComboBox<String>
+    ' linha 13
+    {field} -cozinha: ComboBox<String>
+    ' linha 14
+    {field} -aviso: Label
+    ' linha 15
+    {field} -ambiente: Ambiente
+    ' linha 16
+    {field} -janela: Stage
+    ' linha 18
+    {method} ~preparar(ambiente: Ambiente, janela: Stage, gerencia: boolean): void
+    ' linha 35
+    {method} -salvar(): void
+    ' linha 44
+    {method} -cancelar(): void
+    ' linha 10
+    {method} +ControleConfiguracoes() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Dados.java:12
+  class "Dados" as J_desktop_Dados <<pacote, final>> {
+    ' linha 13
+    {field} {static} -BRASIL: Locale [final]
+    ' linha 15
+    {method} {static} ~texto(dados: JsonObject, campo: String): String
+    ' linha 20
+    {method} {static} ~reais(centavos: long): String
+    ' linha 24
+    {method} {static} ~rotulo(codigo: String): String
+    ' linha 40
+    {method} {static} ~dataLocal(data: String): String
+    ' linha 49
+    {method} {static} ~itens(pedido: JsonObject): String
+    ' linha 64
+    {method} {static} ~consumo(comanda: JsonObject): String
+    ' linha 12
+    {method} ~Dados() [implícito]
+  }
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Ambiente.java:18
+  class "Ambiente" as J_desktop_Ambiente <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ControlePainel.java:19
+  class "ControlePainel" as J_desktop_ControlePainel <<public, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/ClienteHttp.java:15
+  class "ClienteHttp" as J_desktop_ClienteHttp <<pacote, final, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/AtlasDesktop.java:12
+  class "AtlasDesktop" as J_desktop_AtlasDesktop <<public, referência>> #EDF3F9
+
+  ' Desktop/src/main/java/br/ufg/atlas/desktop/Preferencias.java:6
+  class "Preferencias" as J_desktop_Preferencias <<pacote, final, referência>> #EDF3F9
+}
+
+abstract class "javafx.util.StringConverter<String>" as Ext_javafx_util_StringConverter_String_ <<externo>> #EEF1F5
+
+J_desktop_Formularios_anon_38 --|> Ext_javafx_util_StringConverter_String_
+J_desktop_Operacoes --> "1" J_desktop_ControlePainel : painel
+J_desktop_Operacoes --> "1" J_desktop_Ambiente : ambiente
+J_desktop_Operacoes ..> J_desktop_Formularios : editar() / pagar()
+J_desktop_Operacoes ..> J_desktop_ClienteHttp
+J_desktop_Operacoes ..> J_desktop_Dados
+J_desktop_Formularios ..> J_desktop_AtlasDesktop : carregar() / recurso()
+J_desktop_Formularios ..> J_desktop_Dados
+J_desktop_Formularios ..> J_desktop_Formularios_anon_38 : opcoes() cria
+J_desktop_FilaProducao --> "1" J_desktop_ControlePainel : painel
+J_desktop_FilaProducao --> "1" J_desktop_Ambiente : ambiente
+J_desktop_FilaProducao ..> J_desktop_Preferencias : impressora()
+J_desktop_FilaProducao ..> J_desktop_ClienteHttp
+J_desktop_FilaProducao ..> J_desktop_Impressao : localizar() / enviar()
+J_desktop_FilaProducao ..> J_desktop_Dados
+J_desktop_ControleConfiguracoes --> J_desktop_Ambiente : ambiente
+J_desktop_ControleConfiguracoes ..> J_desktop_Preferencias
+J_desktop_ControleConfiguracoes ..> J_desktop_Impressao : filas()
+@enduml

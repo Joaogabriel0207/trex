@@ -1,0 +1,128 @@
+@startuml
+title ATLAS · Classes — Domínio do restaurante
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 36
+skinparam ranksep 47
+
+hide circle
+!pragma layout smetana
+' O espaço após as multiplicidades separa os rótulos das pontas das setas.
+hide empty members
+package "br.ufg.atlas.modelo" {
+  class Restaurante {
+    +cadastrarMesa(numero: int): Mesa
+    +buscarMesa(numero: int): Mesa
+  }
+  class Mesa {
+    -numero: int
+    +abrirComanda(): Comanda
+    +getComandaAberta(): Comanda
+  }
+  class Comanda {
+    -estado: String
+    +incluirPedido(pedido: Pedido): void
+    +solicitarConta(): void
+    +calcularTotal(): long
+    +fecharConta(caixa: Funcionario, pagamento: Pagamento): void
+  }
+  class Pedido {
+    -estado: String
+    +calcularTotal(): long
+    +marcarPronto(gerente: Funcionario): void
+    +registrarEntrega(garcom: Funcionario): void
+  }
+  class ItemPedido {
+    -quantidade: int
+    -observacao: String
+    -precoCentavos: long
+    +calcularSubtotal(): long
+  }
+  class Pagamento {
+    -valorCentavos: long
+  }
+  class Funcionario {
+    -codigo: String
+    -nome: String
+    -ativo: boolean
+    +podeAtender(): boolean
+    +podeAdministrar(): boolean
+    +podeReceber(): boolean
+  }
+  class Produto {
+    -id: long
+    -nome: String
+    -categoria: String
+    -precoCentavos: long
+    -disponivel: boolean
+    +alterarPreco(precoCentavos: long): void
+  }
+  class Cardapio {
+    +adicionar(produto: Produto): void
+    +buscarProduto(id: long): Produto
+  }
+  enum FormaPagamento {
+    DINHEIRO
+    CARTAO
+    PIX
+  }
+  enum Setor {
+    BAR
+    COZINHA
+  }
+  enum Cargo {
+    GERENTE
+    GARCOM
+    CAIXA
+    MAITRE
+    SOMMELIER
+    PADEIRO
+    BARMAN
+    CUMIM
+    COZINHEIRO
+    AUXILIAR_LIMPEZA
+  }
+}
+Restaurante *-down- "0..*  " Mesa : mesas
+Restaurante *-down- "1  " Cardapio : cardapio
+Mesa -down-> "0..1  " Comanda : comanda
+Comanda -up-> "1  " Mesa : mesa
+Comanda "0..1  " *-down- "0..*  " Pedido : pedidos
+Comanda -down-> "0..1  " Pagamento : pagamento
+Pagamento -down-> "1  " FormaPagamento : forma
+Pedido -down-> "1..100  " ItemPedido : itens
+Pedido -down-> "1  " Funcionario : responsavel
+Funcionario -down-> "1  " Cargo : cargo
+ItemPedido -down-> "1  " Produto : produto
+Cardapio -down-> "0..*  " Produto : produtos
+Produto -down-> "1  " Setor : setor
+legend bottom left
+  Mesa guarda a última comanda. getComandaAberta() oculta a encerrada.
+  O item guarda o preço de lançamento. O pedido copia a lista, e cada
+  item pode ser referenciado por vários pedidos em memória.
+endlegend
+@enduml

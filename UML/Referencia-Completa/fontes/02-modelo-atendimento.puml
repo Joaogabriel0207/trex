@@ -1,0 +1,173 @@
+@startuml
+title ATLAS | Classes do Modelo · atendimento e conta
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #17283A
+skinparam titleFontColor #112B46
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #51687E
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F6F9FD
+skinparam packageBorderColor #9AAFC7
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #547693
+skinparam classAttributeFontSize 13
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+skinparam classStereotypeFontColor #405C77
+skinparam noteBackgroundColor #FFF6DB
+skinparam noteBorderColor #AF9055
+skinparam nodesep 34
+skinparam ranksep 48
+set separator none
+hide empty members
+
+package "br.ufg.atlas.modelo" {
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Restaurante.java:5
+  class "Restaurante" as J_modelo_Restaurante <<public, final>> {
+    ' linha 6
+    {field} -mesas: ArrayList<Mesa> [final]
+    ' linha 7
+    {field} -cardapio: Cardapio [final]
+    ' linha 9
+    {method} +cadastrarMesa(numero: int): Mesa
+    ' linha 16
+    {method} +buscarMesa(numero: int): Mesa
+    ' linha 23
+    {method} +getCardapio(): Cardapio
+    ' linha 5
+    {method} +Restaurante() [implícito]
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Mesa.java:3
+  class "Mesa" as J_modelo_Mesa <<public, final>> {
+    ' linha 4
+    {field} -numero: int [final]
+    ' linha 5
+    {field} -comanda: Comanda
+    ' linha 7
+    {method} +Mesa(numero: int)
+    ' linha 12
+    {method} +abrirComanda(): Comanda
+    ' linha 17
+    {method} +getComandaAberta(): Comanda
+    ' linha 22
+    {method} +getNumero(): int
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Comanda.java:6
+  class "Comanda" as J_modelo_Comanda <<public, final>> {
+    ' linha 7
+    {field} -mesa: Mesa [final]
+    ' linha 8
+    {field} -pedidos: ArrayList<Pedido> [final]
+    ' linha 9
+    {field} -estado: String
+    ' linha 10
+    {field} -pagamento: Pagamento
+    ' linha 12
+    {method} ~Comanda(mesa: Mesa)
+    ' linha 14
+    {method} +incluirPedido(pedido: Pedido): void
+    ' linha 21
+    {method} +solicitarConta(): void
+    ' linha 26
+    {method} +fecharConta(caixa: Funcionario, pagamento: Pagamento): void
+    ' linha 35
+    {method} {static} +exigirAberta(estado: String): void
+    ' linha 39
+    {method} {static} +validarPagamento(estado: String, total: long, pagamento: Pagamento): void
+    ' linha 48
+    {method} +calcularTotal(): long
+    ' linha 54
+    {method} +getPedidos(): List<Pedido>
+    ' linha 55
+    {method} +getEstado(): String
+    ' linha 56
+    {method} +getMesa(): Mesa
+    ' linha 57
+    {method} +getPagamento(): Pagamento
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pedido.java:6
+  class "Pedido" as J_modelo_Pedido <<public, final>> {
+    ' linha 7
+    {field} -responsavel: Funcionario [final]
+    ' linha 8
+    {field} -itens: ArrayList<ItemPedido> [final]
+    ' linha 9
+    {field} -comanda: Comanda
+    ' linha 10
+    {field} -estado: String
+    ' linha 12
+    {method} +Pedido(responsavel: Funcionario, itens: List<ItemPedido>)
+    ' linha 26
+    {method} +calcularTotal(): long
+    ' linha 34
+    {method} +marcarPronto(gerente: Funcionario): void
+    ' linha 44
+    {method} +registrarEntrega(garcom: Funcionario): void
+    ' linha 54
+    {method} +getItens(): List<ItemPedido>
+    ' linha 56
+    {method} ~vincular(destino: Comanda): void
+    ' linha 61
+    {method} +getComanda(): Comanda
+    ' linha 62
+    {method} +getResponsavel(): Funcionario
+    ' linha 63
+    {method} +getEstado(): String
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Pagamento.java:3
+  class "Pagamento" as J_modelo_Pagamento <<public, final>> {
+    ' linha 4
+    {field} -valorCentavos: long [final]
+    ' linha 5
+    {field} -forma: FormaPagamento [final]
+    ' linha 7
+    {method} +Pagamento(valorCentavos: long, forma: FormaPagamento)
+    ' linha 15
+    {method} +getValorCentavos(): long
+    ' linha 16
+    {method} +getForma(): FormaPagamento
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/FormaPagamento.java:3
+  enum "FormaPagamento" as J_modelo_FormaPagamento <<public>> {
+    ' linha 4
+    DINHEIRO
+    ' linha 4
+    CARTAO
+    ' linha 4
+    PIX
+  }
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Cardapio.java:6
+  class "Cardapio" as J_modelo_Cardapio <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/ItemPedido.java:3
+  class "ItemPedido" as J_modelo_ItemPedido <<public, final, referência>> #EDF3F9
+
+  ' Modelo/src/main/java/br/ufg/atlas/modelo/Funcionario.java:3
+  class "Funcionario" as J_modelo_Funcionario <<public, final, referência>> #EDF3F9
+}
+
+J_modelo_Restaurante *-- "0..*" J_modelo_Mesa : mesas
+J_modelo_Restaurante *-- "1" J_modelo_Cardapio : cardapio
+J_modelo_Mesa --> "0..1" J_modelo_Comanda : comanda
+J_modelo_Comanda --> "1" J_modelo_Mesa : mesa
+J_modelo_Comanda "0..1" *-- "0..*" J_modelo_Pedido : pedidos / comanda
+J_modelo_Comanda --> "0..1" J_modelo_Pagamento : pagamento
+J_modelo_Pedido --> "1..100" J_modelo_ItemPedido : itens (posições)
+J_modelo_Pedido --> "1" J_modelo_Funcionario : responsavel
+J_modelo_Pagamento --> "1" J_modelo_FormaPagamento : forma
+J_modelo_Comanda ..> J_modelo_Funcionario : fecharConta()
+
+note right of J_modelo_Mesa
+  0..1 refere-se ao campo comanda.
+  Comandas anteriores ainda podem
+  apontar para a mesma mesa.
+end note
+@enduml

@@ -1,0 +1,71 @@
+@startuml
+title ATLAS · Componentes — Arquitetura do sistema
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 29
+skinparam ranksep 38
+
+top to bottom direction
+package "Clientes" {
+  component "Android\nLogin · Atendimento" as Mobile
+  component "Desktop JavaFX\nFXML · ControlePainel" as Desktop {
+    component "FilaProducao" as Fila
+    component "Impressao" as Print
+  }
+}
+package "Servidor ATLAS" {
+  component "Backend Java\nServidor · ApiHttp" as Backend
+  component "Operações JDBC\nDados e classes Banco*" as Repo
+  component "AvisosMqtt\nPublicador Paho" as Pub
+  component "Modelo Java\nRegras de domínio" as Model
+}
+rectangle "API HTTP / JSON\nBearer em rotas protegidas" as API <<interface>> #F1F7FC
+database "PostgreSQL\nesquema.sql" as PG
+queue "Broker MQTT\nMosquitto compatível" as MQTT
+rectangle "Java Print Service" as JPS <<interface>> #F1F7FC
+queue "Fila do SO\nBAR" as Bar
+queue "Fila do SO\nCOZINHA" as Cozinha
+
+Mobile ..> API : HttpURLConnection
+Desktop ..> API : HttpClient
+API -- Backend
+Backend ..> Repo
+Backend ..> Pub : callback após commit
+Repo ..> Model : usa regras
+Repo --> PG : pgJDBC
+Pub --> MQTT : atlas/eventos · QoS 1
+Mobile ..> MQTT : Notificacoes · assina
+Desktop ..> MQTT : AvisosMqtt · assina
+Fila ..> Print
+Print ..> JPS : DocPrintJob.print()
+JPS -- Bar
+JPS -- Cozinha
+legend bottom left
+  O Desktop escolhe a fila configurada para o setor. Os dois nomes podem coincidir.
+  As sessões HTTP ficam em memória. O broker avisa os clientes para atualizarem via HTTP.
+endlegend
+@enduml

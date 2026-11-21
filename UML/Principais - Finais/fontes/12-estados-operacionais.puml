@@ -1,0 +1,72 @@
+@startuml
+title ATLAS · Estados — Ciclo operacional
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 29
+skinparam ranksep 38
+
+hide empty description
+top to bottom direction
+
+state "Comanda" as C {
+  state "ABERTA" as Aberta
+  state "CONTA_SOLICITADA" as Conta
+  state "ENCERRADA" as Fechada
+  [*] --> Aberta : abrir
+  Aberta --> Conta : solicitar [garçom]
+  Conta --> Conta : solicitar novamente pela API
+  Conta --> Fechada : pagar integralmente\n[caixa ou gerente]
+}
+state "Pedido" as P {
+  state "REGISTRADO" as Criado
+  state "PRONTO" as Pronto
+  state "ENTREGUE" as Entregue
+  [*] --> Criado : registrar novo pedido\n[garçom e comanda aberta]
+  Criado --> Pronto : marcarPronto [gerente]
+  Pronto --> Entregue : entregar [garçom autor]
+}
+state "Tarefa de impressão" as T {
+  state "PENDENTE" as Fila
+  state "EM_TENTATIVA" as Tentando
+  state "ENVIADA" as Enviada
+  state "INCERTA" as Incerta
+  state "FALHA" as Falha
+  [*] --> Fila : registrar pedido\n[um registro por setor]
+  Fila --> Tentando : reservar
+  Tentando --> Enviada : retorno da fila\nou conferência
+  Tentando --> Incerta : exceção no envio\nou resultado desconhecido
+  Tentando --> Falha : registrar falha
+  Incerta --> Enviada : conferir envio
+  Incerta --> Falha : conferir falha
+  Falha --> Tentando : reservar novamente\n[repetir e tentativa atual]
+}
+legend bottom left
+  Estados persistidos pelo Backend em entidades distintas.
+  O preparo e a entrega do pedido independem da impressão. ENVIADA se refere à fila do sistema.
+  Repetições idênticas aceitas devolvem o resultado vigente sem nova transição.
+endlegend
+@enduml

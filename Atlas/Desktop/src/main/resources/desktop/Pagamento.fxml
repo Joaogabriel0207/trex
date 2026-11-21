@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" spacing="10" prefWidth="400" styleClass="formulario">
+    <Label fx:id="resumo" wrapText="true" styleClass="subtitulo"/>
+    <Label text="Forma de pagamento"/><ComboBox fx:id="forma" maxWidth="Infinity"/>
+</VBox>

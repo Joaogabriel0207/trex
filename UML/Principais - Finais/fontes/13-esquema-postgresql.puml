@@ -1,0 +1,130 @@
+@startuml
+title ATLAS · Persistência — Esquema PostgreSQL
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontColor #172B42
+skinparam defaultFontSize 14
+skinparam titleFontColor #122E4C
+skinparam titleFontSize 24
+skinparam shadowing false
+skinparam ArrowColor #486778
+skinparam noteBackgroundColor #FFF5DD
+skinparam noteBorderColor #B59759
+skinparam noteFontSize 13
+set separator none
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FC
+skinparam packageBorderColor #94ABC0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #5B7893
+skinparam classAttributeIconSize 0
+skinparam classAttributeFontSize 14
+skinparam componentStyle uml2
+skinparam componentBackgroundColor #EFF6FC
+skinparam componentBorderColor #5B7893
+skinparam usecaseBackgroundColor #F1F7FC
+skinparam usecaseBorderColor #5B7893
+skinparam stateBackgroundColor #EFF6FC
+skinparam stateBorderColor #5B7893
+skinparam nodesep 29
+skinparam ranksep 38
+
+hide circle
+skinparam linetype polyline
+
+entity funcionarios {
+  * codigo : varchar(32) <<PK>>
+  --
+  * nome : varchar(120)
+  * cargo : varchar(24)
+  * ativo : boolean
+  * senha_hash : text
+}
+entity mesas {
+  * id : integer <<PK>>
+  --
+  * numero : integer <<UQ>>
+}
+entity categorias {
+  * id : integer <<PK>>
+  --
+  * nome : varchar(120) <<UQ>>
+}
+entity produtos {
+  * id : integer <<PK>>
+  --
+  * categoria_id : integer <<FK>>
+  * nome : varchar(120)
+  * setor : varchar(10)
+  * preco_centavos : bigint
+  * disponivel : boolean
+}
+entity comandas {
+  * id : integer <<PK>>
+  --
+  * mesa_id : integer <<FK>>
+  * funcionario_codigo : varchar(32) <<FK>>
+  * estado : varchar(20)
+  * abertura : timestamptz
+    encerramento : timestamptz
+}
+entity pedidos {
+  * id : integer <<PK>>
+  --
+  * comanda_id : integer <<FK>>
+  * funcionario_codigo : varchar(32) <<FK>>
+  * chave : uuid
+  * estado : varchar(20)
+  * criacao : timestamptz
+}
+entity itens_pedido {
+  * id : integer <<PK>>
+  --
+  * pedido_id : integer <<FK>>
+  * produto_id : integer <<FK>>
+  * nome : varchar(120)
+  * setor : varchar(10)
+  * preco_centavos : bigint
+  * quantidade : integer
+  * observacao : varchar(240)
+}
+entity pagamentos {
+  * comanda_id : integer <<PK, FK>>
+  --
+  * funcionario_codigo : varchar(32) <<FK>>
+  * valor_centavos : bigint
+  * forma : varchar(20)
+  * registro : timestamptz
+}
+entity tarefas_impressao {
+  * id : integer <<PK>>
+  --
+  * pedido_id : integer <<FK>>
+  * setor : varchar(10)
+  * estado : varchar(20)
+  * tentativa : integer
+    responsavel_codigo : varchar(32) <<FK>>
+    confirmado_por : varchar(32) <<FK>>
+  * detalhe : varchar(500)
+}
+
+mesas ||--o{ comandas
+funcionarios ||--o{ comandas : abertura
+comandas ||--o{ pedidos
+funcionarios ||--o{ pedidos : autoria
+categorias ||--o{ produtos
+produtos ||--o{ itens_pedido
+pedidos ||--o{ itens_pedido
+comandas ||--o| pagamentos
+funcionarios ||--o{ pagamentos : recebimento
+pedidos "1" -- "0..2" tarefas_impressao
+funcionarios |o--o{ tarefas_impressao : responsavel_codigo
+funcionarios |o--o{ tarefas_impressao : confirmado_por
+
+legend bottom left
+  * obrigatório · PK primária · FK estrangeira · UQ único
+  Índice parcial limita a uma comanda não encerrada por mesa.
+  A chave de pedido é única por funcionário. Cada (pedido, setor) de impressão é único.
+  BAR e COZINHA limitam tarefas a 0..2 por pedido na base. Cada registro novo pela API cria 1..2.
+endlegend
+@enduml

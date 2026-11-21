@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.ufg.atlas.desktop.ControleInicio" spacing="16">
+    <Label text="Panorama do restaurante" styleClass="subtitulo"/>
+    <TilePane hgap="12" vgap="12" prefColumns="3" prefTileWidth="178">
+        <Button fx:id="cartaoSalao" maxWidth="Infinity" accessibleText="Abrir Salão" styleClass="cartao-inicio">
+            <graphic><VBox spacing="7">
+                <Label text="Salão" styleClass="nome-cartao">
+                    <graphic><ImageView fitWidth="18" preserveRatio="true"><image><Image url="@salao.png"/></image></ImageView></graphic>
+                </Label>
+                <Separator/>
+                <Label fx:id="ocupadas" text="—" styleClass="valor"/>
+                <Label text="Mesas ocupadas" styleClass="legenda-cartao"/>
+            </VBox></graphic>
+        </Button>
+        <Button fx:id="cartaoPedidos" maxWidth="Infinity" accessibleText="Abrir Pedidos" styleClass="cartao-inicio">
+            <graphic><VBox spacing="7">
+                <Label text="Pedidos" styleClass="nome-cartao">
+                    <graphic><ImageView fitWidth="18" preserveRatio="true"><image><Image url="@pedidos.png"/></image></ImageView></graphic>
+                </Label>
+                <Separator/>
+                <Label fx:id="pendentes" text="—" styleClass="valor"/>
+                <Label text="Pedidos pendentes" styleClass="legenda-cartao"/>
+            </VBox></graphic>
+        </Button>
+        <Button fx:id="cartaoFinanceiro" maxWidth="Infinity" accessibleText="Abrir Financeiro" styleClass="cartao-inicio">
+            <graphic><VBox spacing="7">
+                <Label text="Financeiro" styleClass="nome-cartao">
+                    <graphic><ImageView fitWidth="18" preserveRatio="true"><image><Image url="@financeiro.png"/></image></ImageView></graphic>
+                </Label>
+                <Separator/>
+                <Label fx:id="contas" text="—" styleClass="valor"/>
+                <Label text="Contas solicitadas" styleClass="legenda-cartao"/>
+            </VBox></graphic>
+        </Button>
+    </TilePane>
+</VBox>
