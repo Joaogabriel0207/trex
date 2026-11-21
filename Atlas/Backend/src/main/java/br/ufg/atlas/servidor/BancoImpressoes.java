@@ -12,9 +12,10 @@ final class BancoImpressoes {
     private BancoImpressoes() { }
 
     static JsonArray listar(Connection conexao) throws SQLException {
-        String sql = "SELECT t.id, t.pedido_id, m.numero, t.setor, t.estado, t.tentativa, t.detalhe, f.nome AS garcom, "
+        String sql = "SELECT t.id, t.pedido_id, m.numero, t.setor, t.estado, t.tentativa, t.detalhe, "
+                + "coalesce(f.nome, p.funcionario_nome_historico) AS garcom, "
                 + "i.nome, i.quantidade, i.observacao FROM tarefas_impressao t "
-                + "JOIN pedidos p ON p.id = t.pedido_id JOIN funcionarios f ON f.codigo = p.funcionario_codigo "
+                + "JOIN pedidos p ON p.id = t.pedido_id LEFT JOIN funcionarios f ON f.codigo = p.funcionario_codigo "
                 + "JOIN comandas c ON c.id = p.comanda_id JOIN mesas m ON m.id = c.mesa_id "
                 + "JOIN itens_pedido i ON i.pedido_id = p.id AND i.setor = t.setor ORDER BY t.id DESC, i.id";
         JsonArray tarefas = new JsonArray();

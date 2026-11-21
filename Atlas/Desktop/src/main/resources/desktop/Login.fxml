@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
@@ -18,13 +17,13 @@
         </GridPane>
         <VBox alignment="CENTER" spacing="4" styleClass="boas-vindas">
             <Region VBox.vgrow="ALWAYS"/>
-            <ImageView fitWidth="245" fitHeight="152" preserveRatio="true" accessibleText="Símbolo ATLAS">
-                <viewport><Rectangle2D minX="196" minY="289" width="620" height="396"/></viewport>
-                <image><Image url="@simbolo.png"/></image>
-            </ImageView>
+            <StackPane prefHeight="152">
+                <ImageView fitWidth="330" preserveRatio="true" accessibleText="ATLAS">
+                    <image><Image url="@marca-login.png"/></image>
+                </ImageView>
+            </StackPane>
             <Region VBox.vgrow="ALWAYS"/>
-            <Label text="Bem-vindo ao" maxWidth="Infinity" styleClass="saudacao"/>
-            <Label text="ATLAS" maxWidth="Infinity" styleClass="nome-atlas"/>
+            <Label text="Bem-vindo" maxWidth="Infinity" styleClass="saudacao"/>
         </VBox>
     </StackPane>
     <BorderPane GridPane.columnIndex="1">

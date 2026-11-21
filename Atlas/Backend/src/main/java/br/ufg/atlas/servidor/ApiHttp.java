@@ -10,13 +10,18 @@ import com.google.gson.Strictness;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 final class ApiHttp implements HttpHandler {
     private static final int LIMITE_CORPO = 128 * 1024;
+    private static final int LIMITE_CSV = 512 * 1024;
     private final Gson json = new GsonBuilder().serializeNulls().setStrictness(Strictness.STRICT).create();
     private final ConexaoBanco banco;
     private final Sessoes sessoes;
@@ -80,33 +85,64 @@ final class ApiHttp implements HttpHandler {
             return new JsonObject();
         }
         String[] partes = caminho.substring(1).split("/", -1);
-        JsonObject corpo = metodo.equals("GET") ? new JsonObject() : lerCorpo(troca);
+        boolean funcionarios = partes[0].equals("funcionarios");
+        boolean massa = metodo.equals("POST") && partes.length == 2
+                && (funcionarios || partes[0].equals("produtos"));
+        boolean importar = massa && partes[1].equals("importar");
+        String consulta = troca.getRequestURI().getRawQuery();
+        boolean validar = importar && "validar=true".equals(consulta);
+        if (importar && consulta != null && !validar) throw Campos.invalido("validar");
+        String csv = importar ? lerCsv(troca) : null;
+        JsonObject corpo = metodo.equals("GET") || importar ? new JsonObject() : lerCorpo(troca);
         JsonElement resultado;
         try (Connection conexao = banco.abrir()) {
             conexao.setAutoCommit(false);
             try {
+                if (funcionarios && !metodo.equals("GET") && !validar) {
+                    BancoFuncionarios.bloquearCadastro(conexao);
+                }
                 Funcionario pessoa = BancoFuncionarios.buscarAtivo(conexao, codigo);
                 if (pessoa == null) {
                     sessoes.encerrar(token);
                     throw new ErroHttp(401, "Funcionário inativo. Entre novamente.");
                 }
+                // Uma alteração pode ter revogado o token enquanto aguardávamos o bloqueio no banco.
+                sessoes.identificar(token);
                 Permissoes.verificar(pessoa, metodo, partes);
-                resultado = Dados.executar(conexao, pessoa, metodo, partes, corpo);
-                conexao.commit();
+                resultado = massa ? Dados.executarEmMassa(conexao, pessoa, partes, csv, validar)
+                        : Dados.executar(conexao, pessoa, metodo, partes, corpo);
+                if (funcionarios && resultado.isJsonArray() && massa) {
+                    Set<String> revogados = new HashSet<>();
+                    resultado.getAsJsonArray().forEach(linha ->
+                            revogados.add(linha.getAsJsonObject().get("codigo").getAsString()));
+                    confirmarRevogacao(conexao, revogados);
+                    resultado = Dados.quantidade(revogados.size());
+                } else if (funcionarios && metodo.equals("PUT")) {
+                    confirmarRevogacao(conexao, Set.of(partes[1]));
+                } else {
+                    conexao.commit();
+                }
             } catch (RuntimeException | SQLException falha) {
                 conexao.rollback();
                 throw falha;
             }
         }
-        if (metodo.equals("PUT") && partes[0].equals("funcionarios")) sessoes.revogar(partes[1]);
-        if (!metodo.equals("GET")) avisar.accept(partes[0]);
+        if (!metodo.equals("GET") && !validar) avisar.accept(partes[0]);
         return resultado;
+    }
+
+    private void confirmarRevogacao(Connection conexao, Set<String> codigos) throws SQLException {
+        synchronized (sessoes) {
+            conexao.commit();
+            sessoes.revogarTodos(codigos);
+        }
     }
 
     private JsonObject entrar(JsonObject corpo) throws SQLException {
         String codigo = Campos.texto(corpo, "codigo", 32);
         String senha = Campos.senha(corpo);
         try (Connection conexao = banco.abrir()) {
+            conexao.setAutoCommit(false);
             Funcionario pessoa = BancoFuncionarios.autenticar(conexao, codigo, senha);
             if (pessoa == null) throw new ErroHttp(401, "Código ou senha incorretos.");
             if (!pessoa.podeAtender() && !pessoa.podeReceber()) {
@@ -116,8 +152,22 @@ final class ApiHttp implements HttpHandler {
             resposta.addProperty("codigo", pessoa.getCodigo());
             resposta.addProperty("nome", pessoa.getNome());
             resposta.addProperty("cargo", pessoa.getCargo().name());
-            resposta.addProperty("token", sessoes.abrir(codigo));
+            // Registra o token enquanto a conta continua bloqueada contra desativação ou exclusão.
+            synchronized (sessoes) {
+                conexao.commit();
+                resposta.addProperty("token", sessoes.abrir(codigo));
+            }
             return resposta;
+        }
+    }
+
+    private static String lerCsv(HttpExchange troca) throws IOException {
+        byte[] dados = troca.getRequestBody().readNBytes(LIMITE_CSV + 1);
+        if (dados.length > LIMITE_CSV) throw new ErroHttp(413, "O arquivo CSV deve ter no máximo 512 KiB.");
+        try {
+            return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(dados)).toString();
+        } catch (CharacterCodingException erro) {
+            throw new ErroHttp(400, "Salve o arquivo CSV com codificação UTF-8.");
         }
     }
 

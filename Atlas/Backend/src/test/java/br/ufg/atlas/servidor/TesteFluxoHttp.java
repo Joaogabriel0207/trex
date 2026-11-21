@@ -12,21 +12,34 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Execute na raiz do projeto com ATLAS_TESTE_BANCO_URL e ATLAS_TESTE_BANCO_USUARIO definidos. */
 public final class TesteFluxoHttp {
+    private static final String PRODUTOS = "/produtos/importar";
+    private static final String FUNCIONARIOS = "/funcionarios/importar";
+    private static final String CSV_PRODUTOS = "nome;descricao;preco;categoria;setor;imagem;disponivel\r\n";
+    private static final String CSV_FUNCIONARIOS = "username;name;role;schedule;password;active\n";
     private final HttpClient cliente = HttpClient.newHttpClient();
     private final String base;
     private final String senha;
+    private final ConexaoBanco banco;
+    private final Sessoes sessoes;
+    private final ConcurrentLinkedQueue<String> avisos;
 
-    private TesteFluxoHttp(int porta, String senha) {
+    private TesteFluxoHttp(int porta, String senha, ConexaoBanco banco, Sessoes sessoes,
+            ConcurrentLinkedQueue<String> avisos) {
         base = "http://127.0.0.1:" + porta;
         this.senha = senha;
+        this.banco = banco;
+        this.sessoes = sessoes;
+        this.avisos = avisos;
     }
 
     public static void main(String[] argumentos) throws Exception {
@@ -44,10 +57,12 @@ public final class TesteFluxoHttp {
             HttpServer servidor = HttpServer.create(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0);
             ExecutorService atendimento = Executors.newFixedThreadPool(2);
             servidor.setExecutor(atendimento);
-            servidor.createContext("/", new ApiHttp(isolado, new Sessoes(Clock.systemUTC()), recurso -> {}));
+            Sessoes sessoes = new Sessoes(Clock.systemUTC());
+            ConcurrentLinkedQueue<String> avisos = new ConcurrentLinkedQueue<>();
+            servidor.createContext("/", new ApiHttp(isolado, sessoes, avisos::add));
             try {
                 servidor.start();
-                new TesteFluxoHttp(servidor.getAddress().getPort(), senha).testar();
+                new TesteFluxoHttp(servidor.getAddress().getPort(), senha, isolado, sessoes, avisos).testar();
             } finally {
                 servidor.stop(0);
                 atendimento.shutdownNow();
@@ -107,8 +122,182 @@ public final class TesteFluxoHttp {
         exigir(consultar(conta, gerente).getAsJsonObject().get("estado").getAsString().equals("ENCERRADA"),
                 "Histórico da comanda encerrada");
         requisitar("GET", conta, garcom, null, 404);
-        enviar("/sair", garcom, "{}");
+        for (JsonElement elemento : listar("/pedidos", gerente)) {
+            JsonObject registro = elemento.getAsJsonObject();
+            if (registro.get("estado").getAsString().equals("ENTREGUE")) continue;
+            String caminho = "/pedidos/" + id(registro);
+            enviar(caminho + "/pronto", gerente, "{}");
+            enviar(caminho + "/entregar", registro.get("funcionarioCodigo").getAsString().equals("colega")
+                    ? outro : garcom, "{}");
+        }
+        testarProdutosEmMassa(gerente, garcom, misto, pedido, bar, conta);
+        testarFuncionariosEmMassa(gerente, garcom, outro, caixa, supervisao, conta, mesa);
+        String novo = entrar("atendimento");
+        enviar("/sair", novo, "{}");
+        requisitar("GET", "/mesas", novo, null, 401);
+    }
+
+    private void testarProdutosEmMassa(String gerente, String garcom, String misto, int pedido, int bar, String conta)
+            throws Exception {
+        String bebida = "Café com leite;\"Bebida; com \"\"creme\"\"\r\ne canela\";8,50;Teste;BAR;"
+                + "https://example.test/cafe.png;SIM\r\n";
+        String prato = "Porção;;15.25;Teste;COZINHA;;NÃO\r\n";
+        avisos.clear();
+        requisitar("POST", PRODUTOS, garcom, CSV_PRODUTOS + bebida, 403);
+        requisitar("POST", "/produtos/desativar-todos", garcom, "{}", 403);
+        requisitar("POST", "/produtos/excluir-todos", garcom, "{}", 403);
+        exigir(quantidade(enviar(PRODUTOS + "?validar=true", gerente, "\uFEFF" + CSV_PRODUTOS + bebida + prato)) == 2,
+                "Prévia reconhece BOM, aspas, acentos, vírgula e registros");
+        exigir(listar("/produtos", gerente).size() == 2 && avisos.isEmpty(), "Prévia não grava nem notifica");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + bebida + "A;;2,00;Ausente;BAR;;SIM", 400, 4, "categoria");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;;2,00;Teste;BALCAO;;SIM", 400, 2, "setor");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;;2,001;Teste;BAR;;SIM", 400, 2, "preco");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;;0;Teste;BAR;;SIM", 400, 2, "Preço");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;;2;Teste;BAR;http://example.test/a;SIM", 400, 2, "imagem");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;;2;Teste;BAR;", 400, 2, "disponivel");
+        erroCsv(PRODUTOS, gerente, CSV_PRODUTOS + "A;\"sem fechamento;2;Teste;BAR;;SIM", 400, 2, "descricao");
+        requisitar("POST", PRODUTOS, gerente, "x".repeat(512 * 1024 + 1), 413);
+        exigir(listar("/produtos", gerente).size() == 2 && avisos.isEmpty(), "CSV inválido não grava parcialmente");
+        exigir(quantidade(enviar(PRODUTOS, gerente, "\uFEFF" + CSV_PRODUTOS + bebida + prato)) == 2,
+                "Importação inteira confirmada");
+        JsonObject cafe = localizar(listar("/produtos", gerente), "nome", "Café com leite");
+        exigir(cafe.get("precoCentavos").getAsLong() == 850
+                && cafe.get("descricao").getAsString().equals("Bebida; com \"creme\"\ne canela")
+                && cafe.get("imagem").getAsString().startsWith("https://"), "Campos opcionais e preço persistidos");
+        exigir(quantidade(enviar(PRODUTOS, gerente, CSV_PRODUTOS + bebida)) == 1
+                && listar("/produtos", gerente).size() == 5, "Nome repetido cria outro produto");
+        exigir(quantidade(enviar("/produtos/desativar-todos", gerente, "{}")) == 4
+                && listar("/produtos", garcom).isEmpty() && listar("/produtos", gerente).size() == 5,
+                "Desativar preserva os registros e retira o catálogo do garçom");
+        exigir(quantidade(enviar("/produtos/excluir-todos", gerente, "{}")) == 5
+                && listar("/produtos", gerente).isEmpty(), "Exclusão física de todos os produtos");
+        exigir(id(enviar("/pedidos", garcom, misto)) == pedido, "Pedido continua idempotente após excluir produtos");
+        JsonObject historico = consultar(conta, gerente).getAsJsonObject();
+        exigir(historico.get("totalCentavos").getAsLong() == 5400
+                && historico.getAsJsonArray("pedidos").size() == 3, "Histórico e totais da comanda intactos");
+        try (Connection conexao = banco.abrir()) {
+            JsonObject item = Consultas.um(conexao, "SELECT produto_id, categoria FROM itens_pedido "
+                    + "WHERE pedido_id = ? AND produto_id_historico = ?", pedido, bar);
+            exigir(item.get("produtoId").isJsonNull() && item.get("categoria").getAsString().equals("Teste"),
+                    "Produto desvinculado, ID e categoria históricos preservados");
+            exigir(Consultas.um(conexao, "SELECT id FROM categorias WHERE nome = 'Teste'") != null,
+                    "Categoria preservada");
+        }
+        exigir(avisos.stream().filter("produtos"::equals).count() == 4, "Avisos apenas para operações aplicadas");
+    }
+
+    private void testarFuncionariosEmMassa(String gerente, String garcom, String outro, String caixa, String supervisao,
+            String conta, int mesa) throws Exception {
+        avisos.clear();
+        String ana = "ana_csv;Ana Júlia;GARCOM;18h às 00h;" + senha + ";SIM\n";
+        String bar = "bar_csv;João do Bar;BAR;;" + senha + ";SIM\n";
+        String cozinha = "cozinha_csv;Maria;COZINHA;;" + senha + ";SIM\n";
+        String novoCaixa = "caixa_csv;Pedro;CAIXA;;" + senha + ";NÃO\n";
+        String novaGerente = "gerente_csv;Carla;GERENTE;;" + senha + ";SIM\n";
+        String csv = CSV_FUNCIONARIOS + ana + bar + cozinha + novoCaixa + novaGerente;
+        for (String rota : new String[]{FUNCIONARIOS, "/funcionarios/desativar-todos", "/funcionarios/excluir-todos"}) {
+            requisitar("POST", rota, garcom, rota.equals(FUNCIONARIOS) ? csv : "{}", 403);
+        }
+        exigir(quantidade(enviar(FUNCIONARIOS + "?validar=true", gerente, csv)) == 5
+                && listar("/funcionarios", gerente).size() == 5 && avisos.isEmpty(), "Prévia de funcionários sem efeitos");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + ana + ana, 409, 3, "username");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + ana + "atendimento;Outro;GARCOM;;" + senha + ";SIM",
+                409, 3, "username");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + ana + "a;Outro;GARCOM;;curta;SIM", 400, 3, "senha");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + "a;Outro;GARCOM;;" + "x".repeat(129) + ";SIM",
+                400, 2, "senha");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + "a;Outro;OUTRO;;" + senha + ";SIM", 400, 2, "cargo");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + "a.b;Outro;GARCOM;;" + senha + ";SIM", 400, 2, "Código");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + "a;;GARCOM;;" + senha + ";SIM", 400, 2, "nome");
+        erroCsv(FUNCIONARIOS, gerente, CSV_FUNCIONARIOS + "a;Outro;GARCOM;;" + senha + ";TALVEZ", 400, 2, "active");
+        exigir(listar("/funcionarios", gerente).size() == 5 && avisos.isEmpty(), "Importação de funcionários atômica");
+        exigir(quantidade(enviar(FUNCIONARIOS, gerente, csv)) == 5
+                && "funcionarios".equals(avisos.poll()), "Cinco cargos importados e notificados");
+        JsonArray equipe = listar("/funcionarios", gerente);
+        JsonObject registro = localizar(equipe, "codigo", "ana_csv");
+        exigir(registro.get("expediente").getAsString().equals("18h às 00h") && !equipe.toString().contains(senha)
+                && !registro.has("senhaHash"), "Expediente preservado e credenciais omitidas");
+        exigir(localizar(equipe, "codigo", "bar_csv").get("cargo").getAsString().equals("BARMAN")
+                && localizar(equipe, "codigo", "cozinha_csv").get("cargo").getAsString().equals("COZINHEIRO"),
+                "Apelidos do CSV usam cargos existentes");
+        String atendente = entrar("ana_csv");
+        String novaSessaoGerente = entrar("gerente_csv");
+        requisitar("POST", "/login", null, login("caixa_csv").toString(), 401);
+        requisitar("POST", "/login", null, login("bar_csv").toString(), 403);
+        requisitar("POST", "/login", null, login("cozinha_csv").toString(), 403);
+        requisitar("PUT", "/funcionarios/ana_csv", gerente,
+                "{\"nome\":\"Ana Atualizada\",\"cargo\":\"GARCOM\",\"ativo\":true}", 200);
+        requisitar("GET", "/mesas", atendente, null, 401);
+        atendente = entrar("ana_csv");
+        exigir(localizar(listar("/funcionarios", gerente), "codigo", "ana_csv").get("expediente")
+                .getAsString().equals("18h às 00h"), "Edição individual preserva expediente");
+
+        int aberta = id(enviar("/comandas", atendente, "{\"mesaId\":" + mesa + "}"));
+        int impressao = id(listar("/impressoes", gerente).asList().stream().filter(tarefa ->
+                tarefa.getAsJsonObject().get("estado").getAsString().equals("PENDENTE")).findFirst().orElseThrow());
+        String tarefa = "/impressoes/" + impressao;
+        enviar(tarefa + "/reservar", supervisao, "{}");
+        avisos.clear();
+        String impedimento = requisitar("POST", "/funcionarios/excluir-todos", gerente, "{}", 409)
+                .getAsJsonObject().get("erro").getAsString();
+        exigir(impedimento.contains("Ana Atualizada (ana_csv)") && impedimento.contains("(supervisao)")
+                && listar("/funcionarios", gerente).size() == 10 && avisos.isEmpty(),
+                "Comanda e impressão em andamento impedem a exclusão inteira");
+        enviar(tarefa + "/resultado", supervisao, "{\"estado\":\"ENVIADA\",\"tentativa\":1}");
+        enviar("/comandas/" + aberta + "/solicitar", atendente, "{}");
+        enviar("/comandas/" + aberta + "/pagar", caixa, "{\"valorCentavos\":0,\"forma\":\"PIX\"}");
+        exigir(quantidade(enviar("/funcionarios/desativar-todos", gerente, "{}")) == 8,
+                "Desativação mantém o gerente em uso, ignora quem já era inativo");
+        exigir(listar("/funcionarios", gerente).size() == 10, "Desativação conserva os funcionários");
+        for (String revogada : new String[]{garcom, outro, caixa, supervisao, atendente, novaSessaoGerente}) {
+            try {
+                sessoes.identificar(revogada);
+                throw new AssertionError("Sessão permaneceu na memória");
+            } catch (ErroHttp erro) {
+                exigir(erro.getStatus() == 401, "Sessão revogada da memória");
+            }
+            requisitar("GET", "/mesas", revogada, null, 401);
+        }
+        exigir(quantidade(enviar("/funcionarios/excluir-todos", gerente, "{}")) == 9
+                && listar("/funcionarios", gerente).size() == 1, "Exclusão física preserva o gerente responsável");
+        JsonObject historico = consultar(conta, gerente).getAsJsonObject();
+        exigir(historico.get("totalCentavos").getAsLong() == 5400
+                && localizar(historico.getAsJsonArray("pedidos"), "funcionarioCodigo", "atendimento")
+                    .get("funcionarioNome").getAsString().equals("Teste atendimento")
+                && listar("/impressoes", gerente).size() == 4, "Histórico de comandas, pedidos e impressão preservado");
+        try (Connection conexao = banco.abrir()) {
+            for (String tabela : new String[]{"comandas", "pedidos", "pagamentos"}) {
+                JsonObject antigo = Consultas.um(conexao, "SELECT funcionario_codigo, funcionario_codigo_historico, "
+                        + "funcionario_nome_historico FROM " + tabela + " LIMIT 1");
+                exigir(antigo.get("funcionarioCodigo").isJsonNull()
+                        && !antigo.get("funcionarioCodigoHistorico").isJsonNull()
+                        && !antigo.get("funcionarioNomeHistorico").isJsonNull(), "Vínculo histórico em " + tabela);
+            }
+            JsonObject tarefaAntiga = Consultas.um(conexao, "SELECT responsavel_codigo, confirmado_por, "
+                    + "responsavel_nome_historico, confirmado_nome_historico FROM tarefas_impressao WHERE id = ?", impressao);
+            exigir(tarefaAntiga.get("responsavelCodigo").isJsonNull() && tarefaAntiga.get("confirmadoPor").isJsonNull()
+                    && !tarefaAntiga.get("responsavelNomeHistorico").isJsonNull()
+                    && !tarefaAntiga.get("confirmadoNomeHistorico").isJsonNull(), "Histórico dos operadores de impressão");
+        }
+        exigir(avisos.stream().filter("funcionarios"::equals).count() == 2, "Notificações após desativação e exclusão");
+        cadastrarFuncionario(gerente, "atendimento", "GARCOM");
+        exigir(listar("/pedidos", entrar("atendimento")).isEmpty(), "Novo cadastro com mesmo código não herda pedidos");
         requisitar("GET", "/mesas", garcom, null, 401);
+    }
+
+    private void erroCsv(String rota, String token, String csv, int status, int numero, String campo) throws Exception {
+        String erro = requisitar("POST", rota, token, csv, status).getAsJsonObject().get("erro").getAsString();
+        exigir(erro.contains("Linha " + numero) && erro.contains(campo) && !erro.contains(senha),
+                "Erro de CSV aponta a linha e o campo sem exibir a senha");
+    }
+
+    private static int quantidade(JsonElement resposta) {
+        return resposta.getAsJsonObject().get("quantidade").getAsInt();
+    }
+
+    private static JsonObject localizar(JsonArray registros, String campo, String valor) {
+        return registros.asList().stream().map(JsonElement::getAsJsonObject)
+                .filter(registro -> registro.get(campo).getAsString().equals(valor)).findFirst().orElseThrow();
     }
 
     private void verificarImpressao(String gerente, String supervisao, int pedido) throws Exception {
@@ -146,10 +335,14 @@ public final class TesteFluxoHttp {
     }
 
     private String entrar(String codigo) throws Exception {
+        return enviar("/login", null, login(codigo).toString()).getAsJsonObject().get("token").getAsString();
+    }
+
+    private JsonObject login(String codigo) {
         JsonObject dados = new JsonObject();
         dados.addProperty("codigo", codigo);
         dados.addProperty("senha", senha);
-        return enviar("/login", null, dados.toString()).getAsJsonObject().get("token").getAsString();
+        return dados;
     }
 
     private String cadastrarFuncionario(String gerente, String codigo, String cargo) throws Exception {
@@ -221,7 +414,7 @@ public final class TesteFluxoHttp {
         if (corpo == null) {
             pedido.method(metodo, HttpRequest.BodyPublishers.noBody());
         } else {
-            pedido.header("Content-Type", "application/json");
+            pedido.header("Content-Type", rota.contains("/importar") ? "text/csv; charset=utf-8" : "application/json");
             pedido.method(metodo, HttpRequest.BodyPublishers.ofString(corpo));
         }
         return pedido.build();

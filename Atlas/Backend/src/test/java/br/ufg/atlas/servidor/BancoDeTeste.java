@@ -23,6 +23,7 @@ final class BancoDeTeste implements AutoCloseable {
 
     ConexaoBanco preparar(Path arquivo, String senhaGerente) throws Exception {
         String definicao = Files.readString(arquivo);
+        String migracao = Files.readString(arquivo.resolveSibling("001_importacao_e_operacoes_em_massa.sql"));
         try (Connection conexao = administracao.abrir()) {
             Consultas.executar(conexao, "CREATE SCHEMA " + esquema);
             criado = true;
@@ -36,6 +37,9 @@ final class BancoDeTeste implements AutoCloseable {
             }
             try (PreparedStatement instalar = conexao.prepareStatement(definicao)) {
                 instalar.execute();
+            }
+            try (PreparedStatement atualizar = conexao.prepareStatement(migracao)) {
+                atualizar.execute();
             }
             conexao.setAutoCommit(false);
             BancoFuncionarios.criarPrimeiroGerente(conexao, "gerencia", "Gerente de teste", senhaGerente);

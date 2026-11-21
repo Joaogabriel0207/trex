@@ -51,4 +51,4 @@ $env:ATLAS_TESTE_BANCO_USUARIO = 'atlas_teste'
 mvn -pl Backend exec:java '-Dexec.mainClass=br.ufg.atlas.servidor.TesteFluxoHttp' '-Dexec.classpathScope=test'
 ```
 
-O teste aplica `BancoDeDados/esquema.sql` em um esquema exclusivo e o remove ao terminar. O cenário inclui comandas compartilhadas, reenvio concorrente com a mesma chave, repetição após o fechamento, tarefas de impressão por setor, entrega e pagamento.
+O teste aplica `BancoDeDados/esquema.sql` e a migração `001_importacao_e_operacoes_em_massa.sql` em um esquema exclusivo e o remove ao terminar. O cenário inclui comandas compartilhadas, reenvio concorrente com a mesma chave, repetição após o fechamento, tarefas de impressão por setor, entrega e pagamento. O teste também exercita os CSVs, o rollback, as ações em massa, a revogação de sessões, os avisos após a confirmação e as consultas históricas após exclusões.

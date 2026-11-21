@@ -11,10 +11,13 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 
 final class ConsultaPedidos {
-    private static final String CONSULTA = "SELECT p.id, p.comanda_id, m.numero, f.codigo, f.nome AS funcionario, "
-            + "p.estado, p.criacao, i.produto_id, i.nome, i.setor, i.quantidade, i.observacao, i.preco_centavos "
+    private static final String CONSULTA = "SELECT p.id, p.comanda_id, m.numero, "
+            + "coalesce(f.codigo, p.funcionario_codigo_historico) AS codigo, "
+            + "coalesce(f.nome, p.funcionario_nome_historico) AS funcionario, p.estado, p.criacao, "
+            + "coalesce(i.produto_id, i.produto_id_historico) AS produto_id, "
+            + "i.nome, i.setor, i.quantidade, i.observacao, i.preco_centavos "
             + "FROM pedidos p JOIN comandas c ON c.id = p.comanda_id JOIN mesas m ON m.id = c.mesa_id "
-            + "JOIN funcionarios f ON f.codigo = p.funcionario_codigo JOIN itens_pedido i ON i.pedido_id = p.id ";
+            + "LEFT JOIN funcionarios f ON f.codigo = p.funcionario_codigo JOIN itens_pedido i ON i.pedido_id = p.id ";
 
     private ConsultaPedidos() { }
 
