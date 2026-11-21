@@ -51,7 +51,6 @@
 .rodape { -fx-padding: 12px 18px; }
 .boas-vindas { -fx-padding: 34px; }
 .boas-vindas .saudacao { -fx-font-size: 31px; -fx-font-weight: bold; -fx-text-fill: white; }
-.boas-vindas .nome-atlas { -fx-font-size: 78px; -fx-font-weight: bold; -fx-text-fill: white; }
 .faixa-1 { -fx-background-color: linear-gradient(to bottom, #0347ff, #697df4 38%, #7a7df5 59%, #2940ef 83%, #004dff); }
 .faixa-2 { -fx-background-color: linear-gradient(to bottom, #b3b4f4, #71c5ff 20%, #0f9bfb 40%, #b7a8f9 58%, #d75ed7 71%, #7223ed 83%, #0050ff); }
 .faixa-3 { -fx-background-color: linear-gradient(to bottom, #f5c8fc, #cad1fd 24%, #629df9 43%, #ddadf6 59%, #fa8bc6 75%, #f050de 90%, #bc17f9); }

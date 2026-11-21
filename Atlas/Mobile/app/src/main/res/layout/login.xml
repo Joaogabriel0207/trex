@@ -5,15 +5,14 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="vertical" android:focusableInTouchMode="true">
         <FrameLayout android:layout_width="match_parent" android:layout_height="112dp">
-            <ImageView android:layout_width="96dp" android:layout_height="96dp" android:layout_gravity="center_vertical|start"
-                android:layout_marginStart="5dp" android:src="@drawable/simbolo_atlas" android:importantForAccessibility="no"/>
             <Toolbar android:id="@+id/barra" android:layout_width="64dp" android:layout_height="?android:attr/actionBarSize"
                 android:layout_gravity="top|end" android:theme="@android:style/Theme.Material"/>
         </FrameLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="vertical" android:paddingHorizontal="24dp">
-            <TextView style="@style/Rotulo" android:text="ATLAS" android:fontFamily="sans-serif-black" android:textColor="@color/papel"
-                android:textSize="62sp" android:includeFontPadding="false" android:layout_marginBottom="20dp"/>
+            <ImageView android:layout_width="match_parent" android:layout_height="74dp"
+                android:layout_marginBottom="20dp" android:scaleType="fitCenter"
+                android:src="@drawable/marca_atlas_branca" android:contentDescription="ATLAS"/>
             <EditText android:id="@+id/codigo" style="@style/Campo" android:background="@drawable/campo_login"
                 android:hint="Código do funcionário" android:inputType="textNoSuggestions" android:textColor="@color/papel"
                 android:textColorHint="#DDE9FF" android:textSize="14sp" android:textStyle="bold" android:paddingHorizontal="20dp"

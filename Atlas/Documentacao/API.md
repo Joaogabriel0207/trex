@@ -16,14 +16,26 @@ Erros retornam `{"erro":"mensagem"}`. A API usa, entre outros, HTTP 400 para dad
 |---|---|---|---|
 | `GET /mesas` | Gerente, caixa, garçom | — | Lista com `id`, `numero`, `estado` e `comandaId` (nulo quando livre) |
 | `POST /mesas` | Gerente | `numero` | `id` |
-| `GET /produtos` | Gerente, garçom | — | Lista com `id`, `nome`, `categoria`, `precoCentavos`, `setor` e `disponivel`. O garçom recebe apenas os disponíveis. |
+| `GET /produtos` | Gerente, garçom | — | Lista com `id`, `nome`, `categoria`, `precoCentavos`, `setor` e `disponivel`. O garçom recebe apenas os disponíveis. A lista do gerente inclui `descricao` e `imagem`. |
 | `POST /produtos` | Gerente | `nome`, `categoria`, `precoCentavos`, `setor`, `disponivel` | `id` |
 | `PUT /produtos/{id}` | Gerente | Campos do cadastro | `id` |
-| `GET /funcionarios` | Gerente | — | Lista com `codigo`, `nome`, `cargo` e `ativo` |
+| `GET /funcionarios` | Gerente | — | Lista com `codigo`, `nome`, `cargo`, `ativo` e `expediente` |
 | `POST /funcionarios` | Gerente | `codigo`, `nome`, `cargo`, `ativo`, `senha` | `codigo` |
 | `PUT /funcionarios/{codigo}` | Gerente | `nome`, `cargo`, `ativo` e `senha` opcional | `codigo` |
 
 Os estados da mesa são `LIVRE`, `OCUPADA` e `CONTA_SOLICITADA`. Os setores são `BAR` e `COZINHA`.
+
+## Importação e ações em massa
+
+Todas as rotas abaixo usam `POST`, exigem sessão de gerente e devolvem `{"quantidade": n}` em caso de sucesso.
+
+| Rota | Operação |
+|---|---|
+| `/produtos/importar` e `/funcionarios/importar` | Recebem o CSV como `text/csv; charset=utf-8`. Com `?validar=true`, validam e contam os registros sem gravar. Sem o parâmetro, validam novamente e gravam o arquivo inteiro em uma transação. |
+| `/produtos/desativar-todos` e `/funcionarios/desativar-todos` | Recebem `{}` e desativam os registros ativos. A operação sobre funcionários preserva a conta do gerente autenticado e revoga as sessões das demais contas desativadas. |
+| `/produtos/excluir-todos` e `/funcionarios/excluir-todos` | Recebem `{}` e excluem fisicamente os registros, preservando o histórico. A exclusão de funcionários preserva o gerente autenticado e responde 409 com as contas que ainda têm operações em andamento, quando houver. |
+
+A importação aceita até 512 KiB. Os modelos de CSV estão no [README](../README.md#arquivos-csv). A resposta de erro indica a linha e o campo quando a falha pertence a um registro. A aplicação confirmada publica o recurso correspondente no tópico MQTT já usado pelo Backend.
 
 ## Comandas e pedidos
 

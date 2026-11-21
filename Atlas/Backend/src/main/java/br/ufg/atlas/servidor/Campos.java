@@ -16,9 +16,13 @@ final class Campos {
     }
 
     static String observacao(JsonObject corpo, String campo) {
+        return opcional(corpo, campo, 500);
+    }
+
+    static String opcional(JsonObject corpo, String campo, int limite) {
         if (!corpo.has(campo)) return "";
         String valor = cadeia(corpo, campo);
-        if (valor.length() > 500) throw invalido(campo);
+        if (valor.length() > limite) throw invalido(campo);
         return valor;
     }
 

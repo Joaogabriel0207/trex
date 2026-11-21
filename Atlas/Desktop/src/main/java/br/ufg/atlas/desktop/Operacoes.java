@@ -1,13 +1,19 @@
 package br.ufg.atlas.desktop;
 
 import com.google.gson.JsonObject;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Optional;
+import javafx.application.Platform;
+import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 final class Operacoes {
+    private static final int LIMITE_CSV = 512 * 1024;
     private final Ambiente ambiente;
     private final ControlePainel painel;
     private final Window janela;
@@ -47,6 +53,60 @@ final class Operacoes {
             ambiente.mensagem("Formulário indisponível", e.getMessage());
         }
     }
+
+    void importarCsv(String tipo) {
+        FileChooser seletor = new FileChooser();
+        seletor.setTitle("Importar CSV");
+        seletor.getExtensionFilters().add(new FileChooser.ExtensionFilter("Arquivos CSV (*.csv)", "*.csv"));
+        File arquivo = seletor.showOpenDialog(janela);
+        if (arquivo == null) return;
+        ClienteHttp api = ambiente.api;
+        String rota = "/" + tipo + "/importar";
+        painel.executar(() -> {
+            byte[] csv;
+            try (InputStream entrada = Files.newInputStream(arquivo.toPath())) {
+                csv = entrada.readNBytes(LIMITE_CSV + 1);
+            }
+            if (csv.length > LIMITE_CSV) throw new IOException("O arquivo CSV deve ter no máximo 512 KiB.");
+            int quantidade = api.importarCsv(rota + "?validar=true", csv).get("quantidade").getAsInt();
+            return new PreviaCsv(csv, quantidade);
+        }, previa -> {
+            String mensagem = "Confirma o cadastro de " + previa.quantidade() + " " + rotulo(tipo) + "?";
+            if (tipo.equals("funcionarios")) {
+                mensagem += "\n\nO CSV contém senhas iniciais. Guarde-o em local protegido.";
+            }
+            if (ambiente.confirmar("Importar CSV", mensagem, "Importar")) {
+                Platform.runLater(() -> painel.executar(() -> api.importarCsv(rota, previa.dados()),
+                        salvo -> resultadoEmMassa(salvo, "importado(s)", tipo)));
+            }
+        });
+    }
+
+    private record PreviaCsv(byte[] dados, int quantidade) {}
+
+    void alterarTodos(String tipo, boolean excluir) {
+        boolean funcionarios = tipo.equals("funcionarios");
+        String titulo = excluir ? "Excluir todos" : "Desativar todos";
+        String mensagem = excluir ? "Excluir definitivamente todos os " + rotulo(tipo) + "? O histórico será preservado."
+                : "Desativar todos os " + rotulo(tipo) + " ativos? Os registros permanecerão cadastrados.";
+        if (funcionarios) {
+            mensagem += "\n\nSua conta de gerente permanecerá ativa.";
+            if (excluir) mensagem += " Comandas e operações em andamento podem impedir a exclusão.";
+            else mensagem += " As sessões das contas desativadas serão encerradas.";
+        }
+        if (!ambiente.confirmar(titulo, mensagem, excluir ? "Excluir definitivamente" : "Desativar")) return;
+        ClienteHttp api = ambiente.api;
+        String rota = "/" + tipo + (excluir ? "/excluir-todos" : "/desativar-todos");
+        painel.executar(() -> api.alterar("POST", rota, new JsonObject()),
+                salvo -> resultadoEmMassa(salvo, excluir ? "excluído(s)" : "desativado(s)", tipo));
+    }
+
+    private void resultadoEmMassa(JsonObject resposta, String acao, String tipo) {
+        ambiente.mensagem("ATLAS", resposta.get("quantidade").getAsInt() + " registro(s) de "
+                + rotulo(tipo) + " " + acao + ".");
+    }
+
+    private static String rotulo(String tipo) { return tipo.equals("funcionarios") ? "funcionários" : "produtos"; }
 
     void pronto(JsonObject linha) {
         salvar("POST", "/pedidos/" + Dados.texto(linha, "id") + "/pronto", new JsonObject(),

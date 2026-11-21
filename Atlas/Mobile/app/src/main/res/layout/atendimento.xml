@@ -3,7 +3,8 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical" android:focusableInTouchMode="true">
     <Toolbar android:id="@+id/barra" android:layout_width="match_parent" android:layout_height="?android:attr/actionBarSize"
-        android:background="@color/papel" android:titleTextColor="@color/texto"/>
+        android:background="@color/papel" android:titleTextColor="@color/texto"
+        android:logo="@drawable/marca_atlas_preta" android:logoDescription="ATLAS"/>
     <TextView android:id="@+id/subtitulo" style="@style/Rotulo" android:paddingStart="16dp"
         android:paddingEnd="16dp" android:paddingTop="12dp" android:textStyle="bold"/>
     <LinearLayout android:id="@+id/filtros" android:layout_width="match_parent" android:layout_height="wrap_content"

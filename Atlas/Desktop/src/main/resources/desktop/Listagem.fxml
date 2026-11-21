@@ -3,11 +3,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.*?>
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.ufg.atlas.desktop.ControleListagem" spacing="10">
-    <HBox fx:id="acoes" alignment="CENTER_LEFT" spacing="8">
+    <FlowPane fx:id="acoes" alignment="CENTER_LEFT" hgap="8" vgap="8">
         <Button fx:id="acaoPrincipal" styleClass="principal" />
         <Button fx:id="acaoSecundaria" />
         <Button fx:id="acaoTerciaria" />
-    </HBox>
+        <Button fx:id="acaoQuaternaria" />
+        <Button fx:id="acaoQuinaria" />
+    </FlowPane>
     <TableView fx:id="tabela" VBox.vgrow="ALWAYS">
         <placeholder><Label text="Nenhum registro encontrado."/></placeholder>
     </TableView>

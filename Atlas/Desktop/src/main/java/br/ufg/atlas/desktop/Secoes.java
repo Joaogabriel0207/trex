@@ -77,6 +77,7 @@ final class Secoes {
         tela.codigo("Disponível", "disponivel");
         tela.acao(0, "Cadastrar produto", linha -> true, linha -> operacoes.editar("produtos", null));
         tela.acao(1, "Editar", Objects::nonNull, linha -> operacoes.editar("produtos", linha));
+        acoesEmMassa("produtos");
     }
 
     private void funcionarios() {
@@ -87,6 +88,13 @@ final class Secoes {
         tela.codigo("Ativo", "ativo");
         tela.acao(0, "Cadastrar funcionário", linha -> true, linha -> operacoes.editar("funcionarios", null));
         tela.acao(1, "Editar", Objects::nonNull, linha -> operacoes.editar("funcionarios", linha));
+        acoesEmMassa("funcionarios");
+    }
+
+    private void acoesEmMassa(String tipo) {
+        tela.acao(2, "Importar CSV", linha -> gerente, linha -> operacoes.importarCsv(tipo));
+        tela.acao(3, "Desativar todos", linha -> gerente, linha -> operacoes.alterarTodos(tipo, false));
+        tela.acao(4, "Excluir todos", linha -> gerente, linha -> operacoes.alterarTodos(tipo, true));
     }
 
     private void contas(boolean historico) {

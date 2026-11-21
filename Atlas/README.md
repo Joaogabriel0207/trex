@@ -24,7 +24,10 @@ Em uma instalação nova de PostgreSQL, crie o papel e o banco usados pelo ATLAS
 createuser -h localhost -U postgres --pwprompt atlas
 createdb -h localhost -U postgres --owner atlas atlas
 psql -h localhost -U atlas -d atlas -v ON_ERROR_STOP=1 -f BancoDeDados/esquema.sql
+psql -h localhost -U atlas -d atlas -v ON_ERROR_STOP=1 -f BancoDeDados/001_importacao_e_operacoes_em_massa.sql
 ```
+
+Em um banco existente, aplique somente `001_importacao_e_operacoes_em_massa.sql` uma vez, antes de iniciar o Backend atualizado.
 
 O Backend usa `ATLAS_BANCO_URL` (padrão `jdbc:postgresql://localhost:5432/atlas`) e `ATLAS_BANCO_USUARIO` (padrão `atlas`). Defina `ATLAS_BANCO_SENHA` no terminal se o banco exigir senha. Em PowerShell, use a forma `$env:ATLAS_BANCO_USUARIO = 'atlas'` para definir uma variável de ambiente.
 
@@ -68,11 +71,30 @@ Por padrão, Desktop e Android procuram o broker no host da API, na porta 1883. 
 
 ## Operação
 
+- Em **Cardápio** e **Funcionários**, o gerente pode importar CSV, desativar todos ou excluir todos. A importação valida o arquivo e mostra a quantidade antes da confirmação. A exclusão é definitiva e preserva o histórico. Nas ações sobre funcionários, a conta do gerente que executa a operação permanece ativa. Resolva as comandas e operações indicadas pelo sistema antes de repetir uma exclusão bloqueada. Reative individualmente uma conta se ela precisar voltar a operar.
 - O Android guarda o conteúdo e a chave do pedido antes de enviá-lo. Se o resultado do envio for inconclusivo, repita com o mesmo rascunho para evitar um novo pedido.
 - Na área **Produção**, a gerência envia manualmente os comprovantes por setor. O estado `ENVIADA` indica que o envio à fila foi aceito ou confirmado pelo operador. Confira a fila antes de liberar nova tentativa após um resultado incerto.
 - O caixa ou gerente recebe a conta solicitada pelo garçom. As transições, os perfis e as regras de pagamento estão no [contrato da API](Documentacao/API.md).
 
 Cancelamento, estorno, transferência, gorjeta, pagamento parcial, relatórios e higienização estão fora do escopo operacional atual.
+
+### Arquivos CSV
+
+Salve o arquivo em UTF-8, com separador `;`. O BOM é aceito. Use aspas em campos com ponto e vírgula ou quebra de linha e escreva aspas internas como `""`. Use `SIM` e `NÃO` para as colunas de estado. Os limites são 512 KiB por arquivo, 1.000 produtos ou 100 funcionários por importação.
+
+**Cardápio**. A categoria precisa existir. O cadastro individual de produto permite criar a categoria. O preço aceita vírgula ou ponto decimal, com até duas casas. Descrição e imagem são opcionais e, quando preenchida, a imagem precisa ser uma URL HTTPS.
+
+```csv
+nome;descricao;preco;categoria;setor;imagem;disponivel
+X-Burger;"Pão; carne e queijo";29,90;Hambúrgueres;COZINHA;;SIM
+```
+
+**Funcionários**. O expediente é opcional. A senha inicial deve ter de 8 a 128 caracteres. Proteja o CSV, pois ele contém credenciais iniciais. Os valores `BAR` e `COZINHA` correspondem aos cargos existentes `BARMAN` e `COZINHEIRO`.
+
+```csv
+username;name;role;schedule;password;active
+ana_silva;Ana Silva;GARCOM;18h às 00h;SenhaTemporaria123;SIM
+```
 
 ## Abrir o código
 

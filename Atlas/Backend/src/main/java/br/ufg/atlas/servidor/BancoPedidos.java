@@ -52,9 +52,10 @@ final class BancoPedidos {
         int pedidoId = registro.get("id").getAsInt();
         for (ItemPedido item : selecionados) {
             Consultas.executar(conexao, "INSERT INTO itens_pedido "
-                    + "(pedido_id, produto_id, nome, setor, preco_centavos, quantidade, observacao) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)", pedidoId, item.getProduto().getId(), item.getNome(),
-                    item.getSetor().name(), item.getPrecoCentavos(), item.getQuantidade(), item.getObservacao());
+                    + "(pedido_id, produto_id, nome, setor, preco_centavos, quantidade, observacao, categoria) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", pedidoId, item.getProduto().getId(), item.getNome(),
+                    item.getSetor().name(), item.getPrecoCentavos(), item.getQuantidade(), item.getObservacao(),
+                    item.getProduto().getCategoria());
         }
         Consultas.executar(conexao, "INSERT INTO tarefas_impressao (pedido_id, setor, estado) "
                 + "SELECT DISTINCT pedido_id, setor, 'PENDENTE' FROM itens_pedido WHERE pedido_id = ?", pedidoId);
@@ -69,7 +70,8 @@ final class BancoPedidos {
     private static JsonObject conferirRepeticao(Connection conexao, JsonObject pedido, int comandaId, JsonArray itens)
             throws SQLException {
         int pedidoId = pedido.get("id").getAsInt();
-        JsonArray anteriores = Consultas.lista(conexao, "SELECT produto_id, quantidade, observacao FROM itens_pedido "
+        JsonArray anteriores = Consultas.lista(conexao, "SELECT coalesce(produto_id, produto_id_historico) AS produto_id, "
+                + "quantidade, observacao FROM itens_pedido "
                 + "WHERE pedido_id = ? ORDER BY id", pedidoId);
         if (pedido.get("comandaId").getAsInt() != comandaId || anteriores.size() != itens.size()) throw chaveEmUso();
         for (int i = 0; i < itens.size(); i++) {

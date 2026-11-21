@@ -15,11 +15,12 @@ import javafx.scene.control.*;
 public class ControleListagem {
     @FXML private TableView<JsonObject> tabela;
     @FXML private Button acaoPrincipal, acaoSecundaria, acaoTerciaria;
+    @FXML private Button acaoQuaternaria, acaoQuinaria;
     private Button[] botoes;
     private final Map<Button, Predicate<JsonObject>> permissoes = new HashMap<>();
 
     @FXML private void initialize() {
-        botoes = new Button[]{acaoPrincipal, acaoSecundaria, acaoTerciaria};
+        botoes = new Button[]{acaoPrincipal, acaoSecundaria, acaoTerciaria, acaoQuaternaria, acaoQuinaria};
         for (Button botao : botoes) {
             botao.setVisible(false);
             botao.setManaged(false);

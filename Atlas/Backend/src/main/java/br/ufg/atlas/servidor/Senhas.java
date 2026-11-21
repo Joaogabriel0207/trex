@@ -14,10 +14,15 @@ final class Senhas {
 
     private Senhas() {}
 
-    static String gerar(String senha) {
+    static String validar(String senha) {
         if (senha == null || senha.length() < 8 || senha.length() > 128) {
             throw new IllegalArgumentException("A senha deve ter entre 8 e 128 caracteres.");
         }
+        return senha;
+    }
+
+    static String gerar(String senha) {
+        validar(senha);
         byte[] sal = new byte[16];
         ALEATORIO.nextBytes(sal);
         Base64.Encoder base64 = Base64.getEncoder();

@@ -42,13 +42,23 @@ final class ClienteHttp {
         return requisitar(metodo, caminho, dados).getAsJsonObject();
     }
 
+    JsonObject importarCsv(String caminho, byte[] dados) throws Exception {
+        return requisitar("POST", caminho, HttpRequest.BodyPublishers.ofByteArray(dados),
+                "text/csv; charset=utf-8", Duration.ofMinutes(2)).getAsJsonObject();
+    }
+
     private JsonElement requisitar(String metodo, String caminho, JsonObject corpo) throws Exception {
+        HttpRequest.BodyPublisher dados = corpo == null ? null : HttpRequest.BodyPublishers.ofString(corpo.toString());
+        return requisitar(metodo, caminho, dados, "application/json; charset=utf-8", Duration.ofSeconds(10));
+    }
+
+    private JsonElement requisitar(String metodo, String caminho, HttpRequest.BodyPublisher corpo,
+            String tipo, Duration tempo) throws Exception {
         HttpRequest.Builder pedido = HttpRequest.newBuilder(URI.create(endereco + caminho))
-                .timeout(Duration.ofSeconds(10)).header("Accept", "application/json");
+                .timeout(tempo).header("Accept", "application/json");
         if (!token.isEmpty()) pedido.header("Authorization", "Bearer " + token);
         if (corpo != null) {
-            pedido.header("Content-Type", "application/json; charset=utf-8")
-                    .method(metodo, HttpRequest.BodyPublishers.ofString(corpo.toString()));
+            pedido.header("Content-Type", tipo).method(metodo, corpo);
         }
         HttpResponse<String> resposta;
         try {

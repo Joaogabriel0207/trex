@@ -11,6 +11,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextArea;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -122,6 +125,19 @@ final class Ambiente {
         alerta.setHeaderText(titulo);
         alerta.setContentText(texto);
         alerta.showAndWait();
+    }
+
+    boolean confirmar(String titulo, String texto, String acao) {
+        ButtonType cancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType confirmar = new ButtonType(acao, ButtonBar.ButtonData.OK_DONE);
+        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION, texto, cancelar, confirmar);
+        alerta.initOwner(janela);
+        alerta.setTitle("ATLAS");
+        alerta.setHeaderText(titulo);
+        alerta.getDialogPane().getStylesheets().add(AtlasDesktop.recurso("atlas.css").toExternalForm());
+        ((Button) alerta.getDialogPane().lookupButton(confirmar)).setDefaultButton(false);
+        ((Button) alerta.getDialogPane().lookupButton(cancelar)).setDefaultButton(true);
+        return alerta.showAndWait().orElse(cancelar) == confirmar;
     }
 
     void detalhar(String titulo, String descricao, String texto) {

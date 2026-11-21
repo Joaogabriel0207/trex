@@ -121,7 +121,7 @@ public class ControlePainel {
     }
 
     <T> void executar(Callable<T> tarefa, Consumer<T> sucesso) {
-        if (operando) return;
+        if (operando || encerrado) return;
         operando = true;
         area.setDisable(true);
         ambiente.executar(tarefa, resultado -> {

@@ -11,6 +11,25 @@ import java.sql.SQLException;
 final class Dados {
     private Dados() { }
 
+    static JsonObject quantidade(int quantidade) {
+        JsonObject resposta = new JsonObject();
+        resposta.addProperty("quantidade", quantidade);
+        return resposta;
+    }
+
+    static JsonElement executarEmMassa(Connection conexao, Funcionario gerente, String[] partes,
+            String csv, boolean validar) throws SQLException {
+        return switch (partes[0] + "/" + partes[1]) {
+            case "produtos/importar" -> quantidade(BancoSalao.importarProdutos(conexao, csv, validar));
+            case "produtos/desativar-todos" -> quantidade(BancoSalao.desativarProdutos(conexao));
+            case "produtos/excluir-todos" -> quantidade(BancoSalao.excluirProdutos(conexao));
+            case "funcionarios/importar" -> quantidade(BancoFuncionarios.importarFuncionarios(conexao, csv, validar));
+            case "funcionarios/desativar-todos" -> BancoFuncionarios.desativarFuncionarios(conexao, gerente.getCodigo());
+            case "funcionarios/excluir-todos" -> BancoFuncionarios.excluirFuncionarios(conexao, gerente.getCodigo());
+            default -> throw rotaInexistente();
+        };
+    }
+
     static JsonElement executar(Connection conexao, Funcionario funcionario, String metodo,
             String[] partes, JsonObject corpo) throws SQLException {
         if (partes.length == 0) throw rotaInexistente();

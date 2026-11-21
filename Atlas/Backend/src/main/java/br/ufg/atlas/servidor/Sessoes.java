@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 final class Sessoes {
@@ -33,6 +34,10 @@ final class Sessoes {
     synchronized void encerrar(String token) { sessoes.remove(token); }
 
     synchronized void revogar(String codigo) {
-        sessoes.values().removeIf(sessao -> sessao.codigo().equals(codigo));
+        revogarTodos(Set.of(codigo));
+    }
+
+    synchronized void revogarTodos(Set<String> codigos) {
+        sessoes.values().removeIf(sessao -> codigos.contains(sessao.codigo()));
     }
 }
